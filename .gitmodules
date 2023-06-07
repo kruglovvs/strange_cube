@@ -1,0 +1,6 @@
+[submodule "lsm6ds3tr-c-pid"]
+	path = lsm6ds3tr-c-pid
+	url = https://github.com/STMicroelectronics/lsm6ds3tr-c-pid.git
+[submodule "ESP8266_BOOTLOADER_STM32"]
+	path = ESP8266_BOOTLOADER_STM32
+	url = https://github.com/gonutech/ESP8266_BOOTLOADER_STM32.git
