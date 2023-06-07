@@ -4,3 +4,6 @@
 [submodule "ESP8266_BOOTLOADER_STM32"]
 	path = ESP8266_BOOTLOADER_STM32
 	url = https://github.com/gonutech/ESP8266_BOOTLOADER_STM32.git
+[submodule "TMP112_thijs"]
+	path = TMP112_thijs
+	url = https://github.com/thijses/TMP112_thijs.git
