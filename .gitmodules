@@ -1,9 +1,9 @@
 [submodule "lsm6ds3tr-c-pid"]
-	path = lsm6ds3tr-c-pid
+	path = stm32_lsm6ds3tr_I2C
 	url = https://github.com/STMicroelectronics/lsm6ds3tr-c-pid.git
 [submodule "ESP8266_BOOTLOADER_STM32"]
-	path = ESP8266_BOOTLOADER_STM32
+	path = stm32_esp8266_bootloader
 	url = https://github.com/gonutech/ESP8266_BOOTLOADER_STM32.git
 [submodule "TMP112_thijs"]
-	path = TMP112_thijs
+	path = stm32_tmp112aidrlr_I2C
 	url = https://github.com/thijses/TMP112_thijs.git
