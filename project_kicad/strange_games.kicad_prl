@@ -90,9 +90,9 @@
         "open": false,
         "window": {
           "display": 0,
-          "maximized": true,
+          "maximized": false,
           "pos_x": -9,
-          "pos_y": -9,
+          "pos_y": 0,
           "size_x": 1938,
           "size_y": 1048
         }
