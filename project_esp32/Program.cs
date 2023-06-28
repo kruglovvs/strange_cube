@@ -2,12 +2,9 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace project_esp32
-{
-    public class Program
-    {
-        public static void Main()
-        {
+namespace project_esp32 {
+    public class Program {
+        public static void Main() {
             Debug.WriteLine("Hello from nanoFramework!");
 
             Thread.Sleep(Timeout.Infinite);
