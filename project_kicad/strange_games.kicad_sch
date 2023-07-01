@@ -5348,7 +5348,7 @@
     (property "Value" "MQ-135 gas sensor" (at 167.64 25.4 0)
       (effects (font (size 1.27 1.27)))
     )
-    (property "Footprint" "Connector_PinHeader_1.27mm:PinHeader_1x04_P1.27mm_Vertical" (at 165.1 15.24 0)
+    (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" (at 165.1 15.24 0)
       (effects (font (size 1.27 1.27)) hide)
     )
     (property "Datasheet" "https://www.chipdip.ru/product/mq-135-gas-sensor" (at 165.1 15.24 0)

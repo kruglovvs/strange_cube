@@ -74,18 +74,6 @@
   "project": {
     "files": [
       {
-        "name": "strange_games.kicad_pcb",
-        "open": false,
-        "window": {
-          "display": 0,
-          "maximized": true,
-          "pos_x": -9,
-          "pos_y": -9,
-          "size_x": 1938,
-          "size_y": 1048
-        }
-      },
-      {
         "name": "strange_games.kicad_sch",
         "open": false,
         "window": {
@@ -93,6 +81,18 @@
           "maximized": false,
           "pos_x": -9,
           "pos_y": 0,
+          "size_x": 1938,
+          "size_y": 1048
+        }
+      },
+      {
+        "name": "strange_games.kicad_pcb",
+        "open": false,
+        "window": {
+          "display": 0,
+          "maximized": true,
+          "pos_x": -9,
+          "pos_y": -9,
           "size_x": 1938,
           "size_y": 1048
         }
