@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.Threading;
+using Network;
+using Periphery;
 
 namespace project_esp32
 {

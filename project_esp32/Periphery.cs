@@ -5,57 +5,69 @@ using System.Threading;
 
 namespace Periphery
 {
-    static class Constants
-    {
-        public const int count_buttons = 10;
-        public const int count_phototransistor = 2;
-    }
-    public class Button
-    {
-        public bool is_pressed { get; }
-    }
-    public class Phototransistor
-    {
-        public bool is_illuminated { get; }
-    }
-    public class TMP112
-    {
-        public int temperature { get; }
-    }
-    public class LSM6
-    {
-        public int gyroscope { get; }
-        public int accelerometer { get; }
-    }
-    public class Vibration_sensor
-    {
-        public bool is_vibrating { get; }
-    }
-    public class Gas_sensor
-    {
-        public bool is_gased { get; }
-    }
-    public class Vibration_motor 
-    { 
-        public bool is_vibrating { get;  set; }
-    }
-    public class Door
-    {
-        public bool is_open { get; set; }
-    }
-    public class Data
-    {
-        public string data_string { get; set; }
-    }
     public class Periphery_controller
     {
-        static GpioController s_GpioController;
-        static int s_GreenPinNumber;
-        static int s_RedPinNumber;
-        static int s_UserButtonPinNumber;
+        static class Constants
+        {
+            public const int count_buttons = 10;
+            public const int count_phototransistors = 2;
+            public static readonly int[] pins_buttons = new int[count_buttons] { 22, 21, 25, 24, 23, 15, 7, 6, 18, 17 };
+            public static readonly int[] pins_phototransistors = new int [count_phototransistors] { 28, 27 };
+        }
+        private class Button
+        {
+            private int pin_number;
+            public Button(int _pin_number)
+            {
+                Periphery_controller.gpio_controller.OpenPin(_pin_number, PinMode.Input);
+                pin_number = _pin_number;
+            }
+            public bool is_pressed
+            {
+                get
+                {
+                    return is_pressed;
+                }
+            }
+        }
+        private class Phototransistor
+        {
+            public bool is_illuminated { get; }
+        }
+        private class TMP112
+        {
+            public int temperature { get; }
+        }
+        private class LSM6
+        {
+            public int gyroscope { get; }
+            public int accelerometer { get; }
+        }
+        private class Vibration_sensor
+        {
+            public bool is_vibrating { get; }
+        }
+        private class Gas_sensor
+        {
+            public bool is_gased { get; }
+        }
+        private class Vibration_motor
+        {
+            public bool is_vibrating { get; set; }
+        }
+        private class Door
+        {
+            public bool is_open { get; set; }
+        }
+        public class Data
+        {
+            public string data_string { get; }
+        }
+
+        static GpioController gpio_controller;
 
         private Button[] buttons = new Button[Constants.count_buttons];
-        private Phototransistor[] phototransistors = new Phototransistor[Constants.count_phototransistor];
+        private Phototransistor[] phototransistors = new Phototransistor[Constants.count_phototransistors];
         private TMP112 tmp112 = new TMP112();
         private LSM6 lsm6 = new LSM6();
         private Vibration_sensor vibration_sensor = new Vibration_sensor();
