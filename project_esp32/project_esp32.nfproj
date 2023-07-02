@@ -19,6 +19,7 @@
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.props" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.props')" />
   <ItemGroup>
     <Compile Include="Nerwork.cs" />
+    <Compile Include="Data.cs" />
     <Compile Include="Periphery.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -47,6 +48,9 @@
     </Reference>
     <Reference Include="System.Device.Model">
       <HintPath>packages\nanoFramework.System.Device.Model.1.2.325\lib\System.Device.Model.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Device.Portable">
+      <HintPath>packages\System.Device.Location.Portable.1.0.0\lib\System.Device.Portable.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Ports">
       <HintPath>packages\nanoFramework.System.IO.Ports.1.1.60\lib\System.IO.Ports.dll</HintPath>

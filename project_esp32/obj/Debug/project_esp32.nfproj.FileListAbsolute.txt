@@ -16,3 +16,5 @@ C:\Users\student\Documents\GitHub\strange_games\project_esp32\obj\Debug\project_
 C:\Users\student\Documents\GitHub\strange_games\project_esp32\obj\Debug\project_esp32.pdb
 C:\Users\student\Documents\GitHub\strange_games\project_esp32\obj\Debug\mscorlib.dll
 C:\Users\student\Documents\GitHub\strange_games\project_esp32\obj\Debug\mscorlib.xml
+C:\Users\User\Documents\GitHub\strange_game\strange_game\project_esp32\obj\Debug\project_esp32.nfproj.AssemblyReference.cache
+C:\Users\User\Documents\GitHub\strange_game\strange_game\project_esp32\obj\Debug\project_esp32.nfproj.CoreCompileInputs.cache

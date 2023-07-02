@@ -3604,7 +3604,7 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid d71470e2-891b-4a5a-a1f4-d73b02ba2bf6)
   )
-  (text "I2C address: 1001000b" (at 114.935 66.675 0)
+  (text "I2C address: 11010101b" (at 113.665 66.675 0)
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid d98e2cff-eb27-47a3-8ef6-03527c294bda)
   )

@@ -1,5 +1,5 @@
 
-namespace Network
+namespace NetworkNS
 {
     public class Network_controller
     {
