@@ -4,37 +4,53 @@ using System.Device.I2c;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using DataNS;
 
 namespace PeripheryNS {
-    public class Periphery_controller {
+    public class PeripheryController {
         static class Constants {
             public static class Count {
-                public const int buttons = 10;
-                public const int phototransistors = 2;
+                public const int Buttons = 10;
             }
             public static class Adress {
-                public const int tmp112 = 213; // 8'b11010101
-                public const int lsm6 = 234; // 8'b11101010
+                public const int TMP112 = 213; // 8'b10010010
+                public const int LSM6 = 234; // 8'b11101011
             }
             public static class Pin {
-                public static readonly int[] pins_buttons = new int[count.buttons] { 22, 21, 25, 24, 23, 15, 7, 6, 18, 17 };
-                public static readonly int[] pins_phototransistors = new int[count.phototransistors] { 28, 27 };
+                public static readonly int[] Buttons = new int[Count.Buttons] { 22, 21, 25, 24, 23, 15, 7, 6, 18, 17 };
+                public const int PhotoSensor = 9;
+                public const int Luminoides = 4;
+                public const int VibrationMotor = 5;
             }
         }
-        private class Button {
-            private int pin_number;
-            public Button(int _pin_number) {
-                Periphery_controller.gpio_controller.OpenPin(_pin_number, PinMode.Input);
-                pin_number = _pin_number;
+        private class Sensor {
+            private int _pinNumber { get; set; }
+            public int PinNumber { get { return _pinNumber; } }
+            public Sensor (int pinNumber) {
+                PeripheryController.GpioController.OpenPin(pinNumber, PinMode.Input);
+                _pinNumber = pinNumber;
             }
-            public bool is_pressed {
+            public PinValue Value {
                 get {
-                    return is_pressed;
+                    return GpioController.Read(_pinNumber);
                 }
             }
         }
-        private class Phototransistor {
-            public bool is_illuminated { get; }
+        private class Button : Sensor {
+            public Button(int pinNumber) : base(pinNumber) {
+            }
+        }
+        private class PhotoSensor : Sensor {
+            public PhotoSensor(int pinNumber) : base(pinNumber) {
+            }
+        }
+        private class VibrationSensor : Sensor {
+            public VibrationSensor(int pinNumber) : base(pinNumber) {
+            }
+        }
+        private class GasSensor : Sensor {
+            public GasSensor(int pinNumber) : base(pinNumber) {
+            }
         }
         private class TMP112 {
             public int temperature { get; }
@@ -43,35 +59,51 @@ namespace PeripheryNS {
             public int gyroscope { get; }
             public int accelerometer { get; }
         }
-        private class Vibration_sensor {
-            public bool is_vibrating { get; }
+        private class Actuator {
+            private int _pinNumber { get; set; }
+            public Actuator (int pinNumber) 
+            {
+                PeripheryController.GpioController.OpenPin(pinNumber, PinMode.Output);
+                _pinNumber = pinNumber;
+            }
+            public PinValue IsActing
+            {
+                get 
+                {
+                    return GpioController.Read(_pinNumber);
+                }
+                set
+                {
+                    GpioController.Write(_pinNumber, value);
+                }
+            }
         }
-        private class Gas_sensor {
-            public bool is_gased { get; }
+        private class VibrationMotor : Actuator
+        {
+            public VibrationMotor(int pinNumber) : base(pinNumber)
+            {
+            }
         }
-        private class Vibration_motor {
-            public bool is_vibrating { get; set; }
-        }
-        private class Door {
-            public bool is_open { get; set; }
-        }
-        public class Data {
-            public string data_string { get; }
+        private class Door : Actuator
+        {
+            public Door(int pinNumber) : base(pinNumber)
+            {
+            }
         }
 
-        static GpioController gpio_controller;
+        static GpioController GpioController;
 
         private Button[] buttons = new Button[Constants.Count.buttons];
-        private Phototransistor[] phototransistors = new Phototransistor[Constants.Count.phototransistors];
+        private PhotoSensor phototransistors = new PhotoSensor();
         private TMP112 tmp112 = new TMP112();
         private LSM6 lsm6 = new LSM6();
-        private Vibration_sensor vibration_sensor = new Vibration_sensor();
-        private Gas_sensor gas_sensor = new Gas_sensor();
-        private Vibration_motor vibration_motor = new Vibration_motor();
+        private VibrationSensor vibration_sensor = new VibrationSensor();
+        private GasSensor gas_sensor = new GasSensor();
+        private VibrationMotor vibration_motor = new VibrationMotor();
         private Door door = new Door();
         private Data last_data = new Data();
 
-        public Periphery_controller() {
+        public PeripheryController() {
             last_data = read_data();
         }
 
