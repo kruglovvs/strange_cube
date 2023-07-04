@@ -23,18 +23,18 @@ namespace PeripheryNS {
         private SimpleSensors.GasSensor _gasSensor;
         private I2cSensors.TMP112 _tmp112;
         private I2cSensors.LSM6 _lsm6;
-        private Actuators.VibrationMotor _vibrationMtor;
+        private Actuators.VibrationMotor _vibrationMotor;
         private Actuators.Door _door;
 
         public PeripheryController()
         {
             _buttons = new SimpleSensors.Button[Constants.Counts.Buttons];
             _photoSensor = new SimpleSensors.PhotoSensor(Constants.Pins.PhotoSensor);
-            _tmp112 = new I2cSensors.TMP112(Constants.Adress.TMP112);
-            _lsm6 = new I2cSensors.LSM6(Constants.Adress.LSM6);
+            _tmp112 = new I2cSensors.TMP112(Constants.Adresses.TMP112);
+            _lsm6 = new I2cSensors.LSM6(Constants.Adresses.LSM6);
             _vibrationSensor = new SimpleSensors.VibrationSensor(Constants.Pins.VibrationSensor);
             _gasSensor = new SimpleSensors.GasSensor(Constants.Pins.GasSensor);
-            _vibrationMtor = new Actuators.VibrationMotor(Constants.Pins.VibrationMotor);
+            _vibrationMotor = new Actuators.VibrationMotor(Constants.Pins.VibrationMotor);
             _door = new Actuators.Door(Constants.Pins.Door);
             for (int i = 0; i < Constants.Counts.Buttons; i++)
             {
@@ -49,49 +49,32 @@ namespace PeripheryNS {
             public static class Counts
             {
                 public const int Buttons = 12;
-                public const int PinsTMP112 = 2;
-                public const int PinsLSM6 = 4;
-            }
-            public static class Adress
-            {
-                public const int TMP112 = 146; // 8'b10010010
-                public const int LSM6 = 235; // 8'b11101011
             }
             public static class Pins
             {
-                public static readonly int[] Buttons = new int[Counts.Buttons] { 22, 21, 25, 24, 23, 13, 7, 6, 18, 17, 27, 12 };
-                public const int Luminoides = 4;
-                public const int PhotoSensor = 9;
-                public const int VibrationSensor = 5;
+                public static readonly int[] Buttons = new int[Counts.Buttons] { 33, 32, 27, 26, 25, 1, 7, 6, 18, 17, 27, 12 }; //исправить
+                public const int Luminoides = 2;
+                public const int PhotoSensor = 18;
+                public const int VibrationSensor = 4;
                 public const int GasSensor = 5;
-                public const int SDA = 11;
-                public const int SCL = 14;
-                public const int INT1 = 10;
-                public const int INT2 = 15;
-                public const int MOSI = 28;
-                public const int CLK = 26;
-                public const int A0 = 3;
-                public const int VibrationMotor = 20;
-                public const int Door = 19;
+                public const int SDA = 21;
+                public const int SCL = 22;
+                public const int INT1 = 19;
+                public const int INT2 = 23;
+                public const int MOSI = 13;
+                public const int CLK = 14;
+                public const int A0 = 15;
+                public const int VibrationMotor = 35;
+                public const int Door = 34;
             }
             public static class ID
             {
-                public const int I2cBus = 0;
+                public const int I2cBus = 1;
             }
-            public static class Commands
+            public static class Adresses
             {
-                public static class TMP112
-                {
-                    public const int BufferSizeRead = 1;
-                    public const int BufferSizeWrite = 1;
-                    public static readonly byte[] WriteCommand = new byte[BufferSizeWrite] { 1 };
-                }
-                public static class LSM6
-                {
-                    public const int BufferSizeRead = 1;
-                    public const int BufferSizeWrite = 1;
-                    public static readonly byte[] WriteCommand = new byte[BufferSizeWrite] { 1 };
-                }
+                public const byte TMP112 = 0b1001001;
+                public const byte LSM6 = 0b1001001;
             }
         }
         private class SimpleSensors
@@ -154,30 +137,82 @@ namespace PeripheryNS {
             }
         }
         private class I2cSensors
-        {
+        { 
             private static int _SCL = Constants.Pins.SCL;
             private static int _SDA = Constants.Pins.SDA;
             private static int _INT1 = Constants.Pins.INT1;
             private static int _INT2 = Constants.Pins.INT2;
             public class I2cSensor : I2cDevice
             {
+                public string sa;
                 public I2cSensor(int address) : base(new I2cConnectionSettings(Constants.ID.I2cBus, address)) { }
+                public I2cTransferResult Read(byte[] readBytes)
+                {
+                    I2cTransferResult result = Read(readBytes);
+                    if (result.Status != I2cTransferStatus.FullTransfer)  {
+                        Debug.WriteLine("can't read data");
+                        throw new Exception("can't read data");
+                    }
+                    return result;
+                }
+                public I2cTransferResult Write(byte[] writeBytes)
+                {
+                    I2cTransferResult result = Write(writeBytes);
+                    if (result.Status != I2cTransferStatus.FullTransfer)
+                    {
+                        Debug.WriteLine("can't write data");
+                        throw new Exception("can't write data");
+                    }
+                    return result;
+                }
+                public I2cTransferResult WriteRead(byte[] writeBytes, byte[] readBytes)
+                {
+                    I2cTransferResult result = WriteRead(writeBytes, readBytes);
+                    if (result.Status != I2cTransferStatus.FullTransfer)
+                    {
+                        Debug.WriteLine("can't write or read data");
+                        throw new Exception("can't write or read data");
+                    }
+                    return result;
+                }
             }
             public class TMP112 : I2cSensor
-            {   
+            {
                 public TMP112(int address) : base(address) { }
-                public int Temperature { 
+                public static class Registers
+                {
+                     public static readonly byte Temperature = 0x0;
+                     public static readonly byte Configuration = 0x1;
+                }
+                public double Temperature { 
                     get 
                     {
-
-                        return 1;
+                        byte[] rawTemperature = new byte[2];
+                        Read(new SpanByte(rawTemperature));
+                        return (rawTemperature[0] * 256 + rawTemperature[1]) / 16 * 0.0625;
                     } 
                 }
             }
             public class LSM6 : I2cSensor
             {
-                internal LSM6(int address) : base(address) { }
-                public int Rotation { get; }
+                public LSM6(int address) : base(address) { }
+                public static class Registers
+                {
+                    public static readonly byte[] Temperature = new byte[2] { 0x20, 0x21 };
+                    public static readonly byte[] Rotation = new byte[6] { 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
+                    public static readonly byte[] Accelation = new byte[6] { 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D };
+                }
+                public double[] Rotation 
+                {
+                    get
+                    {
+                        double[] rotation = new double[3];
+                        byte[] rawRotation = new byte[6];
+                        WriteRead(Registers.Rotation[0], rawRotation);
+                        rotation[0] = rawRotation[0] * 256 + rawRotation[1];
+                        return rotation;
+                    }
+                }
                 public int Accelation { get; }
             }
         }

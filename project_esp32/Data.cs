@@ -7,6 +7,12 @@ using System.Threading;
 
 namespace DataNS {
     public class Data {
-        public string data_string { get; }
+        public bool[] Buttons = new bool[12];
+        public double[] Rotation = new double[3];
+        public double[] Accelation = new double[3];
+        public double Temperature = new double();
+        public bool PhotoSensor = new bool();
+        public bool GasSensor = new bool();
+        public bool VibrationSensor = new bool();
     }
 }
