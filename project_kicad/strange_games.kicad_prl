@@ -1,6 +1,6 @@
 {
   "board": {
-    "active_layer": 0,
+    "active_layer": 36,
     "active_layer_preset": "All Layers",
     "auto_track_width": true,
     "hidden_netclasses": [],
@@ -74,8 +74,20 @@
   "project": {
     "files": [
       {
-        "name": "strange_games.kicad_pcb",
+        "name": "strange_games.kicad_sch",
         "open": false,
+        "window": {
+          "display": 0,
+          "maximized": false,
+          "pos_x": -9,
+          "pos_y": 8,
+          "size_x": 1929,
+          "size_y": 1040
+        }
+      },
+      {
+        "name": "strange_games.kicad_pcb",
+        "open": true,
         "window": {
           "display": 0,
           "maximized": true,
