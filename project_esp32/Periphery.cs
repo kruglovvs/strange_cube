@@ -1,13 +1,20 @@
 using System;
 using System.Device.Gpio;
 using System.Device.I2c;
+using System.Device.Spi;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+
+using Iot.Device.Button;
+
 using DataNS;
+using nanoFramework.UI.Input;
+using System.Reflection;
 
 namespace PeripheryNS {
     public class PeripheryController {
+
         static GpioController GpioController;
 
         private SimpleSensors.Button[] _buttons;
@@ -31,7 +38,7 @@ namespace PeripheryNS {
             _door = new Actuators.Door(Constants.Pins.Door);
             for (int i = 0; i < Constants.Counts.Buttons; i++)
             {
-                _buttons[i] = new Button(Constants.Pins.Buttons[i]);
+                _buttons[i] = new SimpleSensors.Button(Constants.Pins.Buttons[i], GpioController);
             }
         }
         public Data send_data() { return new Data(); }
@@ -71,6 +78,21 @@ namespace PeripheryNS {
             {
                 public const int I2cBus = 0;
             }
+            public static class Commands
+            {
+                public static class TMP112
+                {
+                    public const int BufferSizeRead = 1;
+                    public const int BufferSizeWrite = 1;
+                    public static readonly byte[] WriteCommand = new byte[BufferSizeWrite] { 1 };
+                }
+                public static class LSM6
+                {
+                    public const int BufferSizeRead = 1;
+                    public const int BufferSizeWrite = 1;
+                    public static readonly byte[] WriteCommand = new byte[BufferSizeWrite] { 1 };
+                }
+            }
         }
         private class SimpleSensors
         {
@@ -91,12 +113,6 @@ namespace PeripheryNS {
                     }
                 }
             }
-            public class Button : Sensor
-            {
-                public Button(int pinNumber) : base(pinNumber)
-                {
-                }
-            }
             public class PhotoSensor : Sensor
             {
                 public PhotoSensor(int pinNumber) : base(pinNumber)
@@ -115,6 +131,27 @@ namespace PeripheryNS {
                 {
                 }
             }
+            public class Button : GpioButton
+            {
+                private bool _isPressed;
+                public new bool IsPressed { 
+                    get 
+                    {
+                        if (_isPressed)
+                        {
+                            _isPressed = false;
+                            return true;
+                        }
+                        return false;
+                    } 
+                }
+                public Button(int pinNumber, GpioController gpioController) : base(pinNumber, gpioController, true, PinMode.InputPullDown)
+                {
+                    this.IsDoublePressEnabled = true;
+                    this.IsHoldingEnabled = true;
+                    this.ButtonDown += (sender, e) => { _isPressed = true; };
+                }
+            }
         }
         private class I2cSensors
         {
@@ -127,9 +164,15 @@ namespace PeripheryNS {
                 public I2cSensor(int address) : base(new I2cConnectionSettings(Constants.ID.I2cBus, address)) { }
             }
             public class TMP112 : I2cSensor
-            {
+            {   
                 public TMP112(int address) : base(address) { }
-                public int Temperature { get; }
+                public int Temperature { 
+                    get 
+                    {
+
+                        return 1;
+                    } 
+                }
             }
             public class LSM6 : I2cSensor
             {

@@ -1,9 +1,9 @@
 
 namespace NetworkNS
 {
-    public class Network_controller
+    public class NetworkController
     {
-        public Network_controller()
+        public NetworkController()
         {
 
         }

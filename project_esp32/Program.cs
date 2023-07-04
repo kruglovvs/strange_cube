@@ -8,8 +8,8 @@ namespace project_esp32
 {
     public class Program
     {
-        private Periphery_controller periphery_controller = new Periphery_controller();
-        private Network_controller network_controller = new Network_controller();
+        private PeripheryController _peripheryController = new PeripheryController();
+        private NetworkController _networkController = new NetworkController();
         public static void Main()
         {
 
