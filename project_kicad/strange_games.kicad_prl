@@ -74,20 +74,20 @@
   "project": {
     "files": [
       {
-        "name": "strange_games.kicad_sch",
+        "name": "strange_games.kicad_pcb",
         "open": false,
         "window": {
           "display": 0,
-          "maximized": false,
+          "maximized": true,
           "pos_x": -9,
-          "pos_y": 8,
-          "size_x": 1929,
-          "size_y": 1040
+          "pos_y": -9,
+          "size_x": 1938,
+          "size_y": 1048
         }
       },
       {
-        "name": "strange_games.kicad_pcb",
-        "open": true,
+        "name": "strange_games.kicad_sch",
+        "open": false,
         "window": {
           "display": 0,
           "maximized": true,
