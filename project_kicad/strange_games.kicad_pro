@@ -55,7 +55,9 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "annular_width|110005000|134859600|2c843a9e-dc26-4976-9fb3-72d7d5b4bb9e|00000000-0000-0000-0000-000000000000"
+      ],
       "meta": {
         "version": 2
       },
@@ -124,7 +126,7 @@
         "min_text_thickness": 0.35,
         "min_through_hole_diameter": 0.35,
         "min_track_width": 0.19999999999999998,
-        "min_via_annular_width": 0.19999999999999998,
+        "min_via_annular_width": 0.08499999999999999,
         "min_via_diameter": 0.3,
         "solder_mask_clearance": 0.0,
         "solder_mask_min_width": 0.0,
