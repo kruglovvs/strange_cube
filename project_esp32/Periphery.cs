@@ -1,3 +1,5 @@
+// copyright kruglovvs kruglov.valentine@gmail.com
+
 using System;
 using System.Device.Gpio;
 using System.Device.I2c;
@@ -7,13 +9,17 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using Iot.Device.Button;
 using nanoFramework.Hardware.Esp32;
+using nanoFramework.UI;
 
 using DataNS;
+using System.Runtime.CompilerServices;
 
-namespace PeripheryNS {
-    public class PeripheryController {
+namespace PeripheryNS
+{
+    public class PeripheryController
+    {
 
-        static GpioController GpioController;
+        static GpioController GpioController = new GpioController();
 
         private SimpleSensors.Button[] _buttons;
         private SimpleSensors.PhotoSensor _photoSensor;
@@ -23,6 +29,8 @@ namespace PeripheryNS {
         private I2cSensors.LSM6 _lsm6;
         private Actuators.VibrationMotor _vibrationMotor;
         private Actuators.Door _door;
+        private SpiDisplay _display = SpiDisplay.Instance;
+
         public PeripheryController()
         {
             _buttons = new SimpleSensors.Button[Constants.Counts.Buttons];
@@ -35,11 +43,11 @@ namespace PeripheryNS {
             _door = new Actuators.Door(Constants.Pins.Door);
             for (int i = 0; i < Constants.Counts.Buttons; i++)
             {
-                _buttons[i] = new SimpleSensors.Button(Constants.Pins.Buttons[i], GpioController);
+                _buttons[i] = new SimpleSensors.Button(Constants.Pins.Buttons[i]);
             }
         }
-        public Data send_data() { return new Data(); }
-        private Data read_data() { return new Data(); }
+        public Data Data { get; }
+        public bool IsTurnedOn { get; set; }
         private static class Constants
         {
             public static class Counts
@@ -78,7 +86,7 @@ namespace PeripheryNS {
         {
             public class Sensor
             {
-                public int PinNumber { get; private set; }
+                public int PinNumber { get; init; }
                 public Sensor(int pinNumber)
                 {
                     PeripheryController.GpioController.OpenPin(pinNumber, PinMode.Input);
@@ -112,8 +120,9 @@ namespace PeripheryNS {
             }
             public class Button : GpioButton
             {
-                public new bool IsPressed { 
-                    get 
+                public new bool IsPressed
+                {
+                    get
                     {
                         if (IsPressed)
                         {
@@ -122,9 +131,9 @@ namespace PeripheryNS {
                         }
                         return false;
                     }
-                    private set 
-                    { 
-                        IsPressed = value; 
+                    private set
+                    {
+                        IsPressed = value;
                     }
                 }
                 public Button(int pinNumber) : base(pinNumber, GpioController, true, PinMode.InputPullDown)
@@ -136,10 +145,11 @@ namespace PeripheryNS {
             }
         }
         private class I2cSensors
-        { 
+        {
             public class I2cSensor : I2cDevice
             {
-                static I2cSensor() {
+                static I2cSensor()
+                {
                     Configuration.SetPinFunction(Constants.Pins.SDA, DeviceFunction.I2C1_DATA);
                     Configuration.SetPinFunction(Constants.Pins.SCL, DeviceFunction.I2C1_CLOCK);
                 }
@@ -147,7 +157,8 @@ namespace PeripheryNS {
                 public new I2cTransferResult Read(SpanByte readSpanBytes)
                 {
                     I2cTransferResult result = Read(readSpanBytes);
-                    if (result.Status != I2cTransferStatus.FullTransfer)  {
+                    if (result.Status != I2cTransferStatus.FullTransfer)
+                    {
                         Debug.WriteLine("can't read data");
                         throw new Exception("can't read data");
                     }
@@ -179,16 +190,17 @@ namespace PeripheryNS {
                 public TMP112(int address) : base(address) { }
                 public static class Registers
                 {
-                     public const byte Temperature = 0x0;
-                     public const byte Configuration = 0x1;
+                    public const byte Temperature = 0x0;
+                    public const byte Configuration = 0x1;
                 }
-                public double Temperature { 
-                    get 
+                public double Temperature
+                {
+                    get
                     {
                         byte[] rawTemperature = new byte[2];
                         Read(new SpanByte(rawTemperature));
                         return (rawTemperature[0] * 256 + rawTemperature[1]) / 16 * 0.0625;
-                    } 
+                    }
                 }
             }
             public class LSM6 : I2cSensor
@@ -209,7 +221,8 @@ namespace PeripheryNS {
                     //public static readonly byte[] Rotation = new byte[6] { 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 };
                     //public static readonly byte[] Accelation = new byte[6] { 0x28, 0x29, 0x2A, 0x2B, 0x2C, 0x2D };
                 }
-                public double[] ReadValue(byte register) {
+                public double[] ReadValue(byte register)
+                {
                     double[] value = new double[3];
                     byte[] rawValue = new byte[6];
                     WriteRead(new byte[] { register }, new SpanByte(rawValue));
@@ -221,16 +234,17 @@ namespace PeripheryNS {
                 /*public double[] ReadValue(Registers register) {
                     return ReadValue((byte)register);
                 }*/
-                public double[] Rotation 
+                public double[] Rotation
                 {
-                    get 
-                        {
+                    get
+                    {
                         return ReadValue(Registers.Rotation);
                     }
                 }
-                public double[] Accelation 
+                public double[] Accelation
                 {
-                    get {
+                    get
+                    {
                         return ReadValue(Registers.Accelation);
                     }
                 }
@@ -240,17 +254,17 @@ namespace PeripheryNS {
         {
             public class Mechanical
             {
-                public int PinNumber { get; private set; }
+                public int PinNumber { get; init; }
                 public Mechanical(int pinNumber)
                 {
-                    PeripheryController.GpioController.OpenPin(pinNumber, PinMode.Output);
+                    GpioController.OpenPin(pinNumber, PinMode.Output);
                     PinNumber = pinNumber;
                 }
                 public PinValue IsActing
                 {
-                    get 
-                    { 
-                        return IsActing; 
+                    get
+                    {
+                        return IsActing;
                     }
                     set
                     {
@@ -259,23 +273,63 @@ namespace PeripheryNS {
                     }
                 }
             }
-            public class VibrationMotor : Mechanical {
+            public class VibrationMotor : Mechanical
+            {
                 public VibrationMotor(int pinNumber) : base(pinNumber)
                 {
                 }
             }
-            public class Door : Mechanical {
+            public class Door : Mechanical
+            {
                 public Door(int pinNumber) : base(pinNumber)
                 {
                 }
             }
-            public class Luminodiodes {
+            public class Luminodiodes
+            {
                 public int PinNumber { get; private set; }
-                public Luminodiodes(int pinNumber) {
-                    PeripheryController.GpioController.OpenPin(pinNumber, PinMode.Output);
+                public Luminodiodes(int pinNumber)
+                {
+                    GpioController.OpenPin(pinNumber, PinMode.Output);
                     PinNumber = pinNumber;
                 }
-                public byte[] Colors { set { } }
+                /*#region Stubs
+
+                [MethodImpl(MethodImplOptions.InternalCall)]
+                private static extern void NativeGetHardwareSerial(byte[] data);
+
+                #endregion stubs*/
+                public byte[] Colors
+                {
+                    set
+                    {
+                    }
+                }
+            }
+        }
+        private class SpiDisplay : SpiDevice // singleton
+        {
+            private static readonly SpiDisplay _instance = new SpiDisplay();
+            private static GraphicDriver GraphicDriver = new GraphicDriver();
+            public static class Parameters
+            {
+                public const int Width = 128;
+                public const int Height = 64;
+            }
+            public static SpiDisplay Instance { get {  return _instance; } }
+            static SpiDisplay()
+            {
+                DisplayControl.Initialize(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height));
+                Configuration.SetPinFunction(Constants.Pins.MOSI, DeviceFunction.SPI1_MOSI);
+                Configuration.SetPinFunction(Constants.Pins.CLK, DeviceFunction.SPI1_CLOCK);
+                GpioController.OpenPin(Constants.Pins.A0, PinMode.Output);
+            }
+            private SpiDisplay() : base(new SpiConnectionSettings(1)) {
+                DisplayControl.Clear();
+            }
+            public void SendPicture()
+            {
+
             }
         }
     }

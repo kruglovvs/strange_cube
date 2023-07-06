@@ -1,3 +1,5 @@
+// copyright kruglovvs kruglov.valentine@gmail.com
+
 using System;
 using System.Device.Gpio;
 using System.Device.I2c;

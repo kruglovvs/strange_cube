@@ -1,3 +1,4 @@
+// copyright kruglovvs kruglov.valentine@gmail.com
 
 namespace NetworkNS
 {
