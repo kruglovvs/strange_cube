@@ -319,7 +319,7 @@ namespace PeripheryNS
             public static SpiDisplay Instance { get {  return _instance; } }
             static SpiDisplay()
             {
-                DisplayControl.Initialize(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height));
+                DisplayControl.Initialize(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height, GraphicDriver), 1024);
                 Configuration.SetPinFunction(Constants.Pins.MOSI, DeviceFunction.SPI1_MOSI);
                 Configuration.SetPinFunction(Constants.Pins.CLK, DeviceFunction.SPI1_CLOCK);
                 GpioController.OpenPin(Constants.Pins.A0, PinMode.Output);
