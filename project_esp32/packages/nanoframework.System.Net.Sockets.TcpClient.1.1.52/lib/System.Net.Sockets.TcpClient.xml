@@ -1,0 +1,206 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>System.Net.Sockets.TcpClient</name>
+    </assembly>
+    <members>
+        <member name="T:System.Net.Sockets.LingerOption">
+            <summary>
+            Contains information for a socket's linger time, the amount of time it will
+            remain after closing if data remains to be sent.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.LingerOption.#ctor(System.Boolean,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref='T:System.Net.Sockets.LingerOption'/>
+            </summary>
+            <param name="enable">Enable or disable option.</param>
+            <param name="seconds">Number of seconds to linger after close.</param>
+        </member>
+        <member name="P:System.Net.Sockets.LingerOption.Enabled">
+            <summary>
+            Enables or disables lingering after close.
+            </summary>
+        </member>
+        <member name="P:System.Net.Sockets.LingerOption.LingerTime">
+            <summary>
+            The amount of time, in seconds, to remain connected after a close.
+            </summary>
+        </member>
+        <member name="T:System.Net.Sockets.TcpClient">
+            <summary>
+            Provides client connections for TCP network services.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.#ctor">
+            <summary>
+            Initializes a new instance of the TcpClient class.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.#ctor(System.Net.IPEndPoint)">
+            <summary>
+            Initializes a new instance of the TcpClient class with specified end point
+            </summary>
+            <param name="localEP"></param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.#ctor(System.Net.Sockets.AddressFamily)">
+            <summary>
+            Initializes a new instance of the TcpClient class with address family.
+            </summary>
+            <param name="family"></param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.#ctor(System.String,System.Int32)">
+            <summary>
+            Initializes a new instance of the TcpClient class, Bind and connect to
+            host name and port.
+            </summary>
+            <param name="hostname">Target Host name</param>
+            <param name="port">Target port</param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.#ctor(System.Net.Sockets.Socket)">
+            <summary>
+            Used by TcpListener.Accept()
+            </summary>
+            <param name="acceptedSocket"></param>
+        </member>
+        <member name="P:System.Net.Sockets.TcpClient.Client">
+            <summary>
+            Gets or sets the underlying Socket.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.GetStream">
+            <summary>
+            Returns the NetworkStream used to send and receive data to remote host.
+            </summary>
+            <returns>The underlying NetworkStream.</returns>
+        </member>
+        <member name="P:System.Net.Sockets.TcpClient.Available">
+            <summary>
+            Gets the amount of data that has been received from the network 
+            and is available to be read.
+            </summary>
+        </member>
+        <member name="P:System.Net.Sockets.TcpClient.ReceiveTimeout">
+            <summary>
+            Gets or sets the receive time out value of the connection in seconds.
+            </summary>
+        </member>
+        <member name="P:System.Net.Sockets.TcpClient.SendTimeout">
+            <summary>
+             Gets or sets the send time out value of the connection in seconds.
+            </summary>
+        </member>
+        <member name="P:System.Net.Sockets.TcpClient.LingerState">
+            <summary>
+            Gets or sets the value of the connection's linger option
+            </summary>
+        </member>
+        <member name="P:System.Net.Sockets.TcpClient.NoDelay">
+            <summary>
+            Enables or disables delay when send or receive buffers are not full. (Nagle)
+            True if delay is disabled.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.Connect(System.Net.IPEndPoint)">
+            <summary>
+            Connects the client to a remote TCP host using the specified 
+            remote network endpoint.
+            </summary>
+            <param name="remoteEP">The IPEndPoint to which you intend to connect.</param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.Connect(System.Net.IPAddress,System.Int32)">
+            <summary>
+            Connects the client to a remote TCP host using the specified IP address 
+            and port number.
+            </summary>
+            <param name="address">The IPAddress of the host to which you intend to connect.</param>
+            <param name="port">The port number to which you intend to connect.</param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.Connect(System.Net.IPAddress[],System.Int32)">
+            <summary>
+            Connects the client to a remote TCP host using the specified IP addresses and port number.
+            </summary>
+            <param name="address">The IPAddress array of the host to which you intend to connect.</param>
+            <param name="port">The port number to which you intend to connect.</param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.Connect(System.String,System.Int32)">
+            <summary>
+            Connects the Client to the specified port on the specified host.
+            </summary>
+            <param name="hostname">Remote host</param>
+            <param name="port">Remote port</param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.Close">
+            <summary>
+            Disposes this TcpClient instance and 
+            requests that the underlying TCP connection be closed.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.Dispose(System.Boolean)">
+            <inheritdoc/>
+        </member>
+        <member name="M:System.Net.Sockets.TcpClient.Dispose">
+            <summary>
+            Dispose TcpClient
+            </summary>
+        </member>
+        <member name="T:System.Net.Sockets.TcpListener">
+            <summary>
+            Listens for connections from TCP network clients.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpListener.#ctor(System.Net.IPAddress,System.Int32)">
+            <summary>
+            Initializes a new instance of the TcpListener class that listens for incoming connection attempts on the specified local IP address and port number.
+            </summary>
+            <param name="localaddr">An IPAddress that represents the local IP address.</param>
+            <param name="port">The port on which to listen for incoming connection attempts.</param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpListener.#ctor(System.Net.IPEndPoint)">
+            <summary>
+            Initializes a new instance of the TcpListener class that listens for incoming connection 
+            attempts with the specified endpoint.
+            </summary>
+            <param name="localEP">An IPEndPoint that represents the local endpoint to which to bind the listener Socket.</param>
+        </member>
+        <member name="P:System.Net.Sockets.TcpListener.LocalEndpoint">
+            <summary>
+            Gets the underlying EndPoint of the current TcpListener.
+            </summary>
+        </member>
+        <member name="P:System.Net.Sockets.TcpListener.Server">
+            <summary>
+            Gets the underlying network Socket.
+            </summary>
+        </member>
+        <member name="P:System.Net.Sockets.TcpListener.Active">
+            <summary>
+            Gets a value that indicates whether TcpListener is actively listening 
+            for client connections.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpListener.Start(System.Int32)">
+            <summary>
+            Starts listening for incoming connection requests with a maximum number of pending connection.
+            </summary>
+            <param name="backlog">The maximum length of the pending connections queue.</param>
+        </member>
+        <member name="M:System.Net.Sockets.TcpListener.Stop">
+            <summary>
+            Closes the listener.
+            </summary>
+        </member>
+        <member name="M:System.Net.Sockets.TcpListener.AcceptTcpClient">
+            <summary>
+            Accepts a pending connection request.
+            </summary>
+            <returns>A TcpClient used to send and receive data.</returns>
+        </member>
+        <member name="M:System.Net.Sockets.TcpListener.AcceptSocket">
+            <summary>
+            Accepts a pending connection request.
+            </summary>
+            <returns>A Socket used to send and receive data.</returns>
+        </member>
+    </members>
+</doc>
