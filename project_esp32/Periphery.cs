@@ -13,6 +13,9 @@ using nanoFramework.UI;
 
 using DataNS;
 using System.Runtime.CompilerServices;
+using System.Drawing;
+using nanoFramework.Presentation.Controls;
+using nanoFramework.Presentation.Media;
 
 namespace PeripheryNS
 {
@@ -29,7 +32,7 @@ namespace PeripheryNS
         private I2cSensors.LSM6 _lsm6;
         private Actuators.VibrationMotor _vibrationMotor;
         private Actuators.Door _door;
-        private SpiDisplay _display = SpiDisplay.Instance;
+        private SpiDisplays.St7565WO12864 _display;
 
         public PeripheryController()
         {
@@ -46,8 +49,31 @@ namespace PeripheryNS
                 _buttons[i] = new SimpleSensors.Button(Constants.Pins.Buttons[i]);
             }
         }
-        public Data Data { get; }
+        public Data Data 
+        { 
+            get 
+            {
+                Data data = new Data();
+                for (int i = 0; i < Constants.Counts.Buttons; ++i) {
+                    data.Buttons[i] = _buttons[i].IsPressed;
+                }
+                data.PhotoSensor = _photoSensor.Value;
+                data.VibrationSensor = _vibrationSensor.Value;
+                data.GasSensor = _gasSensor.Value;
+                data.Temperature = _tmp112.Temperature;
+                data.Accelation = _lsm6.Accelation;
+                data.Rotation = _lsm6.Rotation;
+                return data;
+            } 
+        }
         public bool IsTurnedOn { get; set; }
+        public SpanByte Image 
+        { 
+            set 
+            {
+                _display.Image = value;
+            } 
+        }
         private static class Constants
         {
             public static class Counts
@@ -84,7 +110,7 @@ namespace PeripheryNS
         }
         private class SimpleSensors
         {
-            public class Sensor
+            public abstract class Sensor
             {
                 public int PinNumber { get; init; }
                 public Sensor(int pinNumber)
@@ -92,11 +118,11 @@ namespace PeripheryNS
                     PeripheryController.GpioController.OpenPin(pinNumber, PinMode.Input);
                     PinNumber = pinNumber;
                 }
-                public PinValue Value
+                public bool Value
                 {
                     get
                     {
-                        return GpioController.Read(PinNumber);
+                        return (bool)GpioController.Read(PinNumber);
                     }
                 }
             }
@@ -146,7 +172,7 @@ namespace PeripheryNS
         }
         private class I2cSensors
         {
-            public class I2cSensor : I2cDevice
+            public abstract class I2cSensor : I2cDevice
             {
                 static I2cSensor()
                 {
@@ -184,11 +210,12 @@ namespace PeripheryNS
                     }
                     return result;
                 }
+                public abstract class Registers { }
             }
             public class TMP112 : I2cSensor
             {
                 public TMP112(int address) : base(address) { }
-                public static class Registers
+                public static new class Registers
                 {
                     public const byte Temperature = 0x0;
                     public const byte Configuration = 0x1;
@@ -212,7 +239,7 @@ namespace PeripheryNS
                     Rotation = 0x22, 
                     Accelation = 0x28,
                 }*/
-                public static class Registers
+                public static new class Registers
                 {
                     public const byte Temperature = 0x20; // { 0x20, 0x21 }
                     public const byte Rotation = 0x22; // { 0x22, 0x23, 0x24, 0x25, 0x26, 0x27 }
@@ -307,29 +334,157 @@ namespace PeripheryNS
                 }
             }
         }
-        private class SpiDisplay : SpiDevice // singleton
+        private class SpiDisplays
         {
-            private static readonly SpiDisplay _instance = new SpiDisplay();
-            private static GraphicDriver GraphicDriver = new GraphicDriver();
-            public static class Parameters
+            public abstract class SpiDisplay // singleton
             {
-                public const int Width = 128;
-                public const int Height = 64;
+                static SpiDisplay()
+                {
+                    Configuration.SetPinFunction(Constants.Pins.MOSI, DeviceFunction.SPI1_MOSI);
+                    Configuration.SetPinFunction(Constants.Pins.CLK, DeviceFunction.SPI1_CLOCK);
+                }
+                public SpiDisplay(SpiConfiguration spiConfiguration, ScreenConfiguration screenConfiguration, uint bufferSize)
+                {
+                    DisplayControl.Initialize(spiConfiguration, screenConfiguration, bufferSize);
+                }
+                public abstract void WritePoint(ushort x, ushort y);
+                public abstract class Registers { }
+                public abstract class Orientation { }
+                public abstract class Parameters { }
+                public abstract SpanByte Image { set; }
             }
-            public static SpiDisplay Instance { get {  return _instance; } }
-            static SpiDisplay()
+            public class St7565WO12864 : SpiDisplay
             {
-                DisplayControl.Initialize(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height, GraphicDriver), 1024);
-                Configuration.SetPinFunction(Constants.Pins.MOSI, DeviceFunction.SPI1_MOSI);
-                Configuration.SetPinFunction(Constants.Pins.CLK, DeviceFunction.SPI1_CLOCK);
-                GpioController.OpenPin(Constants.Pins.A0, PinMode.Output);
-            }
-            private SpiDisplay() : base(new SpiConnectionSettings(1)) {
-                DisplayControl.Clear();
-            }
-            public void SendPicture()
-            {
+                public static class StateA0
+                {
+                    public static readonly PinValue Data = PinValue.High;
+                    public static readonly PinValue Control = PinValue.Low;
+                }
+                public int PinNumberA0 { get; init; }
+                public St7565WO12864(int pinNumberA0) : base(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height, GraphicDriver), 128 * 64)
+                {
+                    PinNumberA0 = pinNumberA0;
+                    GpioController.OpenPin(pinNumberA0, PinMode.Output);
+                }
+                public override void WritePoint(ushort x, ushort y)
+                {
+                    GpioController.Write(PinNumberA0, StateA0.Data);
+                    DisplayControl.WritePoint(x, y, Color.Black);
+                }
+                public static new class Registers
+                {
+                    public const int
+                    NOP = 0x00,
+                    SOFTWARE_RESET = 0x01,
+                    POWER_STATE = 0x10,
+                    Sleep_Out = 0x11,
+                    Invertion_Off = 0x20,
+                    Invertion_On = 0x21,
+                    Gamma_Set = 0x26,
+                    Display_OFF = 0x28,
+                    Display_ON = 0x29,
+                    Column_Address_Set = 0x2A,
+                    Page_Address_Set = 0x2B,
+                    Memory_Write = 0x2C,
+                    Colour_Set = 0x2D,
+                    Memory_Read = 0x2E,
+                    Partial_Area = 0x30,
+                    Memory_Access_Control = 0x36,
+                    Pixel_Format_Set = 0x3A,
+                    Memory_Write_Continue = 0x3C,
+                    Write_Display_Brightness = 0x51,
+                    Frame_Rate_Control_Normal = 0xB1,
+                    Frame_Rate_Control_2 = 0xB2,
+                    Frame_Rate_Control_3 = 0xB3,
+                    Invert_On = 0xB4,
+                    Display_Function_Control = 0xB6,
+                    Entry_Mode_Set = 0xB7,
+                    Power_Control_1 = 0xC0,
+                    Power_Control_2 = 0xC1,
+                    Power_Control_3 = 0xC2,
+                    Power_Control_4 = 0xC3,
+                    Power_Control_5 = 0xC4,
+                    VCOM_Control_1 = 0xC5,
+                    VCOM_Control_2 = 0xC7,
+                    Power_Control_A = 0xCB,
+                    Power_Control_B = 0xCF,
+                    Positive_Gamma_Correction = 0xE0,
+                    Negative_Gamma_Correction = 0XE1,
+                    Driver_Timing_Control_A = 0xE8,
+                    Driver_Timing_Control_B = 0xEA,
+                    Power_On_Sequence = 0xED,
+                    Enable_3G = 0xF2,
+                    Pump_Ratio_Control = 0xF7,
+                    Power_Control_6 = 0xFC;
+                }
+                public static new class Orientation
+                {
+                    public const int
+                    MADCTL_MH = 0x04, // sets the Horizontal Refresh, 0=Left-Right and 1=Right-Left
+                    MADCTL_ML = 0x10, // sets the Vertical Refresh, 0=Top-Bottom and 1=Bottom-Top
+                    MADCTL_MV = 0x20, // sets the Row/Column Swap, 0=Normal and 1=Swapped
+                    MADCTL_MX = 0x40, // sets the Column Order, 0=Left-Right and 1=Right-Left
+                    MADCTL_MY = 0x80, // sets the Row Order, 0=Top-Bottom and 1=Bottom-Top
+                    MADCTL_BGR = 0x08; // Blue-Green-Red pixel order
+                }
+                public static new class Parameters
+                {
+                    public const int Width = 128;
+                    public const int Height = 64;
+                }
+                public override SpanByte Image { set { } }
 
+                public static GraphicDriver GraphicDriver = new GraphicDriver();
+                /*{
+                    MemoryWrite = 0x2C,
+                    SetColumnAddress = 0x2A,
+                    SetRowAddress = 0x2B,
+                    InitializationSequence = new byte[]
+                    {
+                                                        (byte)GraphicDriverCommandType.Command, 1, (byte)Registers.SOFTWARE_RESET,
+                                                        // Sleep for 50 ms
+                                                        (byte)GraphicDriverCommandType.Sleep, 5,
+                                                        (byte)GraphicDriverCommandType.Command, 1, (byte)Registers.Sleep_Out,
+                                                        // Sleep for 500 ms
+                                                        (byte)GraphicDriverCommandType.Sleep, 50,
+                                                        (byte)GraphicDriverCommandType.Command, 4, (byte)Registers.Frame_Rate_Control_Normal, 0x01, 0x2C, 0x2D,
+                                                        (byte)GraphicDriverCommandType.Command, 4, (byte)Registers.Frame_Rate_Control_2, 0x01, 0x2C, 0x2D,
+                                                        (byte)GraphicDriverCommandType.Command, 7, (byte)Registers.Frame_Rate_Control_3, 0x01, 0x2C, 0x2D, 0x01, 0x2C, 0x2D,
+                                                        (byte)GraphicDriverCommandType.Command, 2, (byte)Registers.Invert_On, 0x07,
+                                                        (byte)GraphicDriverCommandType.Command, 1, (byte)Registers.Invertion_On,
+                                                        // 0x55 -> 16 bit
+                                                        (byte)GraphicDriverCommandType.Command, 2, (byte)Registers.Pixel_Format_Set, 0x55,
+                                                        (byte)GraphicDriverCommandType.Command, 4, (byte)Registers.Power_Control_1, 0xA2, 0x02, 0x84,
+                                                        (byte)GraphicDriverCommandType.Command, 2, (byte)Registers.Power_Control_2, 0xC5,
+                                                        (byte)GraphicDriverCommandType.Command, 3, (byte)Registers.Power_Control_3, 0x0A, 0x00,
+                                                        (byte)GraphicDriverCommandType.Command, 3, (byte)Registers.Power_Control_4, 0x8A, 0x2A,
+                                                        (byte)GraphicDriverCommandType.Command, 3, (byte)Registers.Power_Control_5, 0x8A, 0xEE,
+                                                        (byte)GraphicDriverCommandType.Command, 4, (byte)Registers.VCOM_Control_1, 0x0E, 0xFF, 0xFF,
+                                                        (byte)GraphicDriverCommandType.Command, 17, (byte)Registers.Positive_Gamma_Correction, 0x02, 0x1c, 0x7, 0x12, 0x37, 0x32, 0x29, 0x2d, 0x29, 0x25, 0x2B, 0x39, 0x00, 0x01, 0x03, 0x10,
+                                                        (byte)GraphicDriverCommandType.Command, 17, (byte)Registers.Negative_Gamma_Correction, 0x03, 0x1d, 0x07, 0x06, 0x2E, 0x2C, 0x29, 0x2D, 0x2E, 0x2E, 0x37, 0x3F, 0x00, 0x00, 0x02, 0x1,
+                                                        (byte)GraphicDriverCommandType.Command, 1, (byte)Registers.Sleep_Out,
+                                                        (byte)GraphicDriverCommandType.Command, 1, (byte)Registers.Display_ON,
+                                                        // Sleep 100 ms
+                                                        (byte)GraphicDriverCommandType.Sleep, 10,
+                                                        (byte)GraphicDriverCommandType.Command, 1, (byte)Registers.NOP,
+                                                        // Sleep 20 ms
+                                                        (byte)GraphicDriverCommandType.Sleep, 2,
+                                                    },
+                    OrientationLandscape = new byte[]
+                                                    {
+                                                        (byte)GraphicDriverCommandType.Command, 2, (byte)Registers.Memory_Access_Control, (byte)(Orientation.MADCTL_MY | Orientation.MADCTL_MX | Orientation.MADCTL_BGR),
+                                                    },
+                    PowerModeNormal = new byte[]
+                                                    {
+                                                        (byte)GraphicDriverCommandType.Command, 3, (byte)Registers.POWER_STATE, 0x00, 0x00,
+                                                    },
+                    PowerModeSleep = new byte[]
+                                                    {
+                                                        (byte)GraphicDriverCommandType.Command, 3, (byte)Registers.POWER_STATE, 0x00, 0x01,
+                                                    },
+                    DefaultOrientation = DisplayOrientation.Landscape,
+                    Brightness = (byte)Registers.Write_Display_Brightness,
+                };*/
             }
         }
     }

@@ -9,12 +9,12 @@ using System.Threading;
 
 namespace DataNS {
     public class Data {
-        public bool[] Buttons = new bool[12];
-        public double[] Rotation = new double[3];
-        public double[] Accelation = new double[3];
-        public double Temperature = new double();
-        public bool PhotoSensor = new bool();
-        public bool GasSensor = new bool();
-        public bool VibrationSensor = new bool();
+        public bool[] Buttons { get; set; } = new bool[12];
+        public double[] Rotation { get; set; } = new double[3];
+        public double[] Accelation { get; set; } = new double[3];
+        public double Temperature { get; set; } = new double();
+        public bool PhotoSensor { get; set; } = new bool();
+        public bool GasSensor { get; set; } = new bool();
+        public bool VibrationSensor { get; set; } = new bool();
     }
 }
