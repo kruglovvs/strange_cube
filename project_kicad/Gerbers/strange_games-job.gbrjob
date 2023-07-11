@@ -3,9 +3,9 @@
     "GenerationSoftware": {
       "Vendor": "KiCad",
       "Application": "Pcbnew",
-      "Version": "7.0.2"
+      "Version": "7.0.5"
     },
-    "CreationDate": "2023-07-05T22:01:38+03:00"
+    "CreationDate": "2023-07-11T14:32:15+03:00"
   },
   "GeneralSpecs": {
     "ProjectId": {
@@ -14,8 +14,8 @@
       "Revision": "rev?"
     },
     "Size": {
-      "X": 150.1,
-      "Y": 225.1
+      "X": 166.1,
+      "Y": 166.1
     },
     "LayerNumber": 2,
     "BoardThickness": 1.6,
@@ -24,8 +24,8 @@
   "DesignRules": [
     {
       "Layers": "Outer",
-      "PadToPad": 0.2,
-      "PadToTrack": 0.2,
+      "PadToPad": 0.0,
+      "PadToTrack": 0.0,
       "TrackToTrack": 0.2,
       "MinLineWidth": 0.2,
       "TrackToRegion": 0.2,
@@ -44,14 +44,14 @@
       "FilePolarity": "Positive"
     },
     {
-      "Path": "strange_games-F_Silkscreen.gbr",
-      "FileFunction": "Legend,Top",
-      "FilePolarity": "Positive"
+      "Path": "strange_games-F_Mask.gbr",
+      "FileFunction": "SolderMask,Top",
+      "FilePolarity": "Negative"
     },
     {
-      "Path": "strange_games-B_Silkscreen.gbr",
-      "FileFunction": "Legend,Bot",
-      "FilePolarity": "Positive"
+      "Path": "strange_games-B_Mask.gbr",
+      "FileFunction": "SolderMask,Bot",
+      "FilePolarity": "Negative"
     },
     {
       "Path": "strange_games-Edge_Cuts.gbr",

@@ -32,8 +32,8 @@ namespace PeripheryNS
         private static Sensors.LSM6 _lsm6 = new Sensors.LSM6(Constants.Adresses.LSM6);
         private static Actuators.VibrationMotor _vibrationMotor = new Actuators.VibrationMotor(Constants.Pins.VibrationMotor);
         private static Actuators.Door _door = new Actuators.Door(Constants.Pins.Door);
-        private static Displays.St7565WO12864 _display = new Displays.St7565WO12864(Constants.Pins.A0);
-        private static Displays.Luminodiodes _luminodiodes = new Displays.Luminodiodes(Constants.Pins.Luminoides);
+        private static Displays.St7565WO12864 _display = new Displays.St7565WO12864(Constants.Pins.A0, Constants.Pins.ARes, Constants.Pins.ACs);
+        private static Displays.Luminodiodes _luminodiodes = new Displays.Luminodiodes(Constants.Pins.Luminoides, Constants.Counts.Luminodiodes);
 
         static PeripheryController()
         {
@@ -62,7 +62,7 @@ namespace PeripheryNS
             }
         }
         public static bool IsTurnedOn { get; set; }
-        public static SpanByte Image
+        public static Byte[] Image
         {
             set
             {
@@ -76,6 +76,16 @@ namespace PeripheryNS
             {
                 public const int Buttons = 12;
                 public const int Luminodiodes = 9;
+                public static class PixelBytes
+                {
+                    public const int Luminodiodes = 12;
+                    public const int St7565WO12864 = 404;
+                }
+                public static class CountPixels
+                {
+                    public const int Luminodiodes = 9;
+                    public const int St7565WO12864 = 128*64;
+                }
             }
             public static class Pins
             {
@@ -83,7 +93,7 @@ namespace PeripheryNS
                 public const int Luminoides = 34;
                 public const int PhotoSensor = 27;
                 public const int VibrationSensor = 35;
-                public const int GasSensor = 404;
+                public const int GasSensor = 404; // 
                 public const int SDA = 21;
                 public const int SCL = 22;
                 public const int INT1 = 19;
@@ -91,6 +101,8 @@ namespace PeripheryNS
                 public const int MOSI = 13;
                 public const int CLK = 14;
                 public const int A0 = 12;
+                public const int ARes = 404;
+                public const int ACs = 404;
                 public const int VibrationMotor = 35;
                 public const int Door = 32;
             }
@@ -158,7 +170,7 @@ namespace PeripheryNS
                 public double[] Read(byte register);
                 public static class Registers { }
             }
-            public class I2cSensor : I2cDevice
+            public abstract class I2cSensor : I2cDevice
             {
                 static I2cSensor()
                 {
@@ -321,31 +333,33 @@ namespace PeripheryNS
         }
         private class Displays
         {
-            public interface IOneWireDisplay
+            public interface IDisplay
             {
-                public int PinNumber { get; init; }
-                public int CountPixels { get; init; }
+                public static int CountPixelBytes { get; }
+                public int CountPixels { get; }
                 public byte[] Image { set; }
             }
-            public class Luminodiodes : IOneWireDisplay
+            public class Luminodiodes : IDisplay
             {
-                public int PinNumber { get; init; }
+                public static int CountPixelBytes { get; } = Constants.Counts.PixelBytes.Luminodiodes;
                 public int CountPixels { get; init; }
+                public int PinNumber { get; init; }
                 public Luminodiodes(int pinNumber, int countPixels)
                 {
                     GpioController.OpenPin(pinNumber, PinMode.Output);
                     PinNumber = pinNumber;
                     CountPixels = countPixels;
+                    
                 }
                 public byte[] Image
                 {
                     set
                     {
+                        // I should create dll driver for 1-wire luminodiodes
                     }
                 }
             }
-            public interface ISpiDisplay
-            public class SpiDisplay
+            public abstract class SpiDisplay
             {
                 static SpiDisplay()
                 {
@@ -356,31 +370,37 @@ namespace PeripheryNS
                 {
                     DisplayControl.Initialize(spiConfiguration, screenConfiguration, bufferSize);
                 }
-                public abstract void WritePoint(ushort x, ushort y);
-                public abstract class Registers { }
-                public abstract class Orientation { }
-                public abstract class Parameters { }
-                public abstract SpanByte Image { set; }
             }
-            public class St7565WO12864 : SpiDisplay
+            public class St7565WO12864 : SpiDisplay, IDisplay
             {
+                public static int CountPixelBytes { get; } = Constants.Counts.PixelBytes.St7565WO12864;
+                public int CountPixels { get; } = Constants.Counts.CountPixels.St7565WO12864;
                 public static class StateA0
                 {
                     public static readonly PinValue Data = PinValue.High;
                     public static readonly PinValue Control = PinValue.Low;
                 }
                 public int PinNumberA0 { get; init; }
-                public St7565WO12864(int pinNumberA0) : base(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height, GraphicDriver), 128 * 64)
+                public int PinNumberARes { get; init; }
+                public int PinNumberACs { get; init; }
+                public St7565WO12864(int pinNumberA0, int pinNumberARes, int pinNumberACs) : base(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height, GraphicDriver), 128 * 64)
                 {
                     PinNumberA0 = pinNumberA0;
-                    GpioController.OpenPin(pinNumberA0, PinMode.Output);
+                    PinNumberARes = pinNumberARes;
+                    PinNumberACs = pinNumberACs;
+                    GpioController.OpenPin(pinNumberA0, PinMode.OutputOpenDrainPullUp);
+                    GpioController.Write(pinNumberA0,PinValue.High);
+                    GpioController.OpenPin(pinNumberARes, PinMode.OutputOpenDrainPullUp);
+                    GpioController.Write(pinNumberARes, PinValue.High);
+                    GpioController.OpenPin(pinNumberACs, PinMode.OutputOpenSourcePullDown);
+                    GpioController.Write(pinNumberACs, PinValue.Low);
                 }
-                public override void WritePoint(ushort x, ushort y)
+                public void WritePoint(ushort x, ushort y)
                 {
                     GpioController.Write(PinNumberA0, StateA0.Data);
                     DisplayControl.WritePoint(x, y, Color.Black);
                 }
-                public static new class Registers
+                public static class Registers
                 {
                     public const int
                     NOP = 0x00,
@@ -426,7 +446,7 @@ namespace PeripheryNS
                     Pump_Ratio_Control = 0xF7,
                     Power_Control_6 = 0xFC;
                 }
-                public static new class Orientation
+                public static class Orientation
                 {
                     public const int
                     MADCTL_MH = 0x04, // sets the Horizontal Refresh, 0=Left-Right and 1=Right-Left
@@ -436,13 +456,12 @@ namespace PeripheryNS
                     MADCTL_MY = 0x80, // sets the Row Order, 0=Top-Bottom and 1=Bottom-Top
                     MADCTL_BGR = 0x08; // Blue-Green-Red pixel order
                 }
-                public static new class Parameters
+                public static class Parameters
                 {
                     public const int Width = 128;
                     public const int Height = 64;
                 }
-                public override SpanByte Image { set { } }
-
+                public byte[] Image { set { } }
                 public static GraphicDriver GraphicDriver = new GraphicDriver();
                 /*{
                     MemoryWrite = 0x2C,
