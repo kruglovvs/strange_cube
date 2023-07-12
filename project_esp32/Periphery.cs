@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Drawing;
 using nanoFramework.Presentation.Controls;
 using nanoFramework.Presentation.Media;
+using static DataNS.Data.Periphery;
 
 namespace PeripheryNS
 {
@@ -24,51 +25,60 @@ namespace PeripheryNS
 
         private static GpioController GpioController = new GpioController();
 
-        private static Sensors.Button[] _buttons = new Sensors.Button[Constants.Counts.Buttons];
-        private static Sensors.SimpleSensor _photoSensor = new Sensors.SimpleSensor(Constants.Pins.PhotoSensor);
-        private static Sensors.SimpleSensor _vibrationSensor = new Sensors.SimpleSensor(Constants.Pins.VibrationSensor);
-        private static Sensors.SimpleSensor _gasSensor = new Sensors.SimpleSensor(Constants.Pins.GasSensor);
-        private static Sensors.TMP112 _tmp112 = new Sensors.TMP112(Constants.Adresses.TMP112);
-        private static Sensors.LSM6 _lsm6 = new Sensors.LSM6(Constants.Adresses.LSM6);
-        private static Actuators.VibrationMotor _vibrationMotor = new Actuators.VibrationMotor(Constants.Pins.VibrationMotor);
-        private static Actuators.Door _door = new Actuators.Door(Constants.Pins.Door);
-        private static Displays.St7565WO12864 _display = new Displays.St7565WO12864(Constants.Pins.A0, Constants.Pins.ARes, Constants.Pins.ACs);
-        private static Displays.Luminodiodes _luminodiodes = new Displays.Luminodiodes(Constants.Pins.Luminoides, Constants.Counts.Luminodiodes);
+        private static Sensors.Button[] _buttons;
+        private static Sensors.SimpleSensor _photoSensor;
+        private static Sensors.SimpleSensor _vibrationSensor;
+        private static Sensors.SimpleSensor _gasSensor;
+        private static Sensors.TMP112 _tmp112;
+        private static Sensors.LSM6 _lsm6;
+        private static Actuators.Mechanical _vibrationMotor;
+        private static Actuators.Mechanical _door;
+        private static Displays.St7565WO12864 _display;
+        private static Displays.Luminodiodes _luminodiodes;
 
         static PeripheryController()
         {
+            _buttons = new Sensors.Button[Constants.Counts.Buttons];
+            _photoSensor = new Sensors.SimpleSensor(Constants.Pins.PhotoSensor);
+            _vibrationSensor = new Sensors.SimpleSensor(Constants.Pins.VibrationSensor);
+            _gasSensor = new Sensors.SimpleSensor(Constants.Pins.GasSensor);
+            _tmp112 = new Sensors.TMP112(Constants.Adresses.TMP112);
+            _lsm6 = new Sensors.LSM6(Constants.Adresses.LSM6);
+            _vibrationMotor = new Actuators.Mechanical(Constants.Pins.VibrationMotor);
+            _door = new Actuators.Mechanical(Constants.Pins.Door);
+            _display = new Displays.St7565WO12864(Constants.Pins.A0, Constants.Pins.ARes, Constants.Pins.ACs);
+            _luminodiodes = new Displays.Luminodiodes(Constants.Pins.Luminoides, Constants.Counts.Luminodiodes);
             for (int i = 0; i < Constants.Counts.Buttons; i++)
             {
                 _buttons[i] = new Sensors.Button(Constants.Pins.Buttons[i]);
             }
         }
-
-        public Data Data
+        public bool IsTurnedOn
         {
             get
             {
-                Data data = new Data();
-                for (int i = 0; i < Constants.Counts.Buttons; ++i)
-                {
-                    data.Buttons[i] = _buttons[i].IsPressed;
-                }
-                data.PhotoSensor = _photoSensor.Value;
-                data.VibrationSensor = _vibrationSensor.Value;
-                data.GasSensor = _gasSensor.Value;
-                data.Temperature = _tmp112.Temperature;
-                data.Accelation = _lsm6.Accelation;
-                data.Rotation = _lsm6.Rotation;
-                return data;
+
+            }
+            set 
+            { 
+
             }
         }
-        public bool IsTurnedOn { get; set; }
         public Data.Periphery.Image Image
         {
             set
             {
-                _display.Image = value;
             }
         }
+
+        public class ButtonPressedEventArgs : EventArgs
+        {
+            public int Number;
+        }
+        public event EventHandler<ButtonPressedEventArgs> ButtonPressed;
+        public event EventHandler GasSensored;
+        public event EventHandler TemperatureSensored;
+        public event EventHandler PhotoSensored;
 
         private static class Constants
         {
@@ -84,7 +94,7 @@ namespace PeripheryNS
                 public static class CountPixels
                 {
                     public const int Luminodiodes = 9;
-                    public const int St7565WO12864 = 128*64;
+                    public const int St7565WO12864 = 128 * 64;
                 }
             }
             public static class Pins
@@ -106,6 +116,24 @@ namespace PeripheryNS
                 public const int VibrationMotor = 35;
                 public const int Door = 32;
             }
+            public static class PinModes
+            {
+                public static readonly PinMode Button = PinMode.Input;
+                public static readonly PinMode SimpleSensor = PinMode.Input;
+                public static readonly PinMode Mechanical = PinMode.Output;
+                public static readonly PinMode Luminodiodes = PinMode.OutputOpenSourcePullDown;
+                public static readonly PinMode A0 = PinMode.OutputOpenDrainPullUp;
+                public static readonly PinMode ARes = PinMode.OutputOpenDrainPullUp;
+                public static readonly PinMode ACs = PinMode.OutputOpenSourcePullDown;
+            }
+            public static class PinStartValues
+            {
+                public static readonly PinValue Mechanical = PinValue.Low;
+                public static readonly PinValue Luminodiodes = PinValue.Low;
+                public static readonly PinValue A0 = PinValue.High;
+                public static readonly PinValue ARes = PinValue.High;
+                public static readonly PinValue ACs = PinValue.High;
+            }
             public static class ID
             {
                 public const int I2cBus = 1;
@@ -120,28 +148,28 @@ namespace PeripheryNS
         {
             public interface ISimpleSensor
             {
-                public int PinNumber { get; init; }
-                public bool Value { get; }
+                public GpioPin Pin { get; init; }
+                public event EventHandler Sensored;
             }
             public class SimpleSensor : ISimpleSensor
             {
-                public int PinNumber { get; init; }
+                public GpioPin Pin { get; init; }
                 public SimpleSensor(int pinNumber)
                 {
-                    PeripheryController.GpioController.OpenPin(pinNumber, PinMode.Input);
-                    PinNumber = pinNumber;
-                }
-                public bool Value
-                {
-                    get
+                    Pin = GpioController.OpenPin(pinNumber, Constants.PinModes.SimpleSensor);
+                    Pin.ValueChanged += (s, e) =>
                     {
-                        return (bool)GpioController.Read(PinNumber);
-                    }
+                        if((bool)Pin.Read()) { 
+                            this.Sensored.Invoke(this, new EventArgs());
+                        }
+                    };
                 }
+                public event EventHandler Sensored;
+                public event EventHandler Unsensored;
             }
             public class Button : GpioButton, ISimpleSensor
             {
-                public int PinNumber { get; init; }
+                public int Pin { get; init; }
                 public bool Value
                 {
                     get
@@ -158,7 +186,7 @@ namespace PeripheryNS
                         Value = value;
                     }
                 }
-                public Button(int pinNumber) : base(pinNumber, GpioController, true, PinMode.InputPullDown)
+                public Button(int pinNumber) : base(pinNumber, GpioController, true, Constants.PinModes.Button)
                 {
                     this.IsDoublePressEnabled = false; // it can be changed
                     this.IsHoldingEnabled = false; // it can be changed
@@ -302,7 +330,7 @@ namespace PeripheryNS
                 public int PinNumber { get; init; }
                 public Mechanical(int pinNumber)
                 {
-                    GpioController.OpenPin(pinNumber, PinMode.Output);
+                    GpioController.OpenPin(pinNumber, Constants.PinModes.Mechanical);
                     PinNumber = pinNumber;
                 }
                 public bool IsActing
@@ -316,18 +344,6 @@ namespace PeripheryNS
                         GpioController.Write(PinNumber, (PinValue)value);
                         IsActing = value;
                     }
-                }
-            }
-            public class VibrationMotor : Mechanical
-            {
-                public VibrationMotor(int pinNumber) : base(pinNumber)
-                {
-                }
-            }
-            public class Door : Mechanical
-            {
-                public Door(int pinNumber) : base(pinNumber)
-                {
                 }
             }
         }
@@ -346,10 +362,10 @@ namespace PeripheryNS
                 public int PinNumber { get; init; }
                 public Luminodiodes(int pinNumber, int countPixels)
                 {
-                    GpioController.OpenPin(pinNumber, PinMode.Output);
+                    GpioController.OpenPin(pinNumber, Constants.PinModes.Luminodiodes);
                     PinNumber = pinNumber;
                     CountPixels = countPixels;
-                    
+
                 }
                 public byte[] Image
                 {
@@ -388,11 +404,12 @@ namespace PeripheryNS
                     PinNumberA0 = pinNumberA0;
                     PinNumberARes = pinNumberARes;
                     PinNumberACs = pinNumberACs;
-                    GpioController.OpenPin(pinNumberA0, PinMode.OutputOpenDrainPullUp);
-                    GpioController.Write(pinNumberA0,PinValue.High);
-                    GpioController.OpenPin(pinNumberARes, PinMode.OutputOpenDrainPullUp);
+                    OpenPin(pinNumberA0,  )
+                    GpioController.OpenPin(pinNumberA0, Constants.PinModes.A0);
+                    GpioController.Write(pinNumberA0, PinValue.High);
+                    GpioController.OpenPin(pinNumberARes, Constants.PinModes.ARes);
                     GpioController.Write(pinNumberARes, PinValue.High);
-                    GpioController.OpenPin(pinNumberACs, PinMode.OutputOpenSourcePullDown);
+                    GpioController.OpenPin(pinNumberACs, Constants.PinModes.ACs);
                     GpioController.Write(pinNumberACs, PinValue.Low);
                 }
                 public void WritePoint(ushort x, ushort y)
@@ -515,5 +532,6 @@ namespace PeripheryNS
                 };*/
             }
         }
+
     }
 }

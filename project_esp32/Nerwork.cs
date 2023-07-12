@@ -16,32 +16,18 @@ using DataNS;
 
 namespace NetworkNS
 {
-    public static class NetworkController
+    public class NetworkController
     {
         private static Connections.Wifi s_wifi;
         private static Clients.Mqtt s_mqtt;
 
         static NetworkController()
         {
-            try
-            {
                 s_wifi = new Connections.Wifi(Constants.Wifi.SSID, Constants.Wifi.Password);
                 s_mqtt = new Clients.Mqtt(Constants.Mqtt.Ip, Constants.Mqtt.Port, Constants.Mqtt.UsingSecure,
                 Constants.Mqtt.CaCert, Constants.Mqtt.ClientCert, Constants.Mqtt.MqttSslProtocol,
                 Constants.Mqtt.clientID, Constants.Mqtt.Username, Constants.Mqtt.Password,
                 Constants.Mqtt.Topics.Subscribed);
-            }
-            catch
-            {
-                if (!s_wifi.IsConnected)
-                {
-                    s_wifi.Reconnect();
-                }
-                if (!s_mqtt.IsConnected)
-                {
-                    s_mqtt.Reconnect();
-                }
-            }
         }
         public static Data.Network Get()
         {
@@ -91,7 +77,7 @@ namespace NetworkNS
             return IsConnected;
         }
 
-        public static class Constants
+        private static class Constants
         {
             public static class Wifi
             {
