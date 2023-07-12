@@ -7,7 +7,7 @@ using DataNS;
 using NetworkNS;
 using PeripheryNS;
 
-namespace project_esp32
+namespace ProjectESP32
 {
     public class Program
     {

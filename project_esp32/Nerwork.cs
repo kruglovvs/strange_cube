@@ -6,9 +6,5 @@ namespace NetworkNS
 {
     public class NetworkController
     {
-        public NetworkController()
-        {
-        }
-        public bool Send(Data data) { return true; }
     }
 }

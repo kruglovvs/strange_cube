@@ -19,7 +19,7 @@ using nanoFramework.Presentation.Media;
 
 namespace PeripheryNS
 {
-    public static class PeripheryController
+    public class PeripheryController
     {
 
         private static GpioController GpioController = new GpioController();
@@ -43,7 +43,7 @@ namespace PeripheryNS
             }
         }
 
-        public static Data Data
+        public Data Data
         {
             get
             {
@@ -61,8 +61,8 @@ namespace PeripheryNS
                 return data;
             }
         }
-        public static bool IsTurnedOn { get; set; }
-        public static Byte[] Image
+        public bool IsTurnedOn { get; set; }
+        public Data.Periphery.Image Image
         {
             set
             {
