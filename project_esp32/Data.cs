@@ -1,4 +1,5 @@
-using nanoFramework.M2Mqtt.Messages;
+// copyright kruglovvs kruglov.valentine@gmail.com
+
 using System;
 using System.Collections;
 using System.Device.Gpio;
@@ -6,6 +7,7 @@ using System.Device.I2c;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
+using nanoFramework.M2Mqtt.Messages;
 
 namespace DataNS {
     public class Data {
@@ -31,7 +33,13 @@ namespace DataNS {
         }
         public class Periphery : IData
         {
-
+            public bool[] Buttons { get; set; } = new bool[12];
+            public double[] Rotation { get; set; } = new double[3];
+            public double[] Accelation { get; set; } = new double[3];
+            public double Temperature { get; set; } = new double();
+            public bool PhotoSensor { get; set; } = new bool();
+            public bool GasSensor { get; set; } = new bool();
+            public bool VibrationSensor { get; set; } = new bool();
         }
     }
 }
