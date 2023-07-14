@@ -31,6 +31,9 @@
     <Reference Include="Iot.Device.Button">
       <HintPath>packages\nanoFramework.Iot.Device.Button.1.2.329\lib\Iot.Device.Button.dll</HintPath>
     </Reference>
+    <Reference Include="Iot.Device.KeyMatrix">
+      <HintPath>packages\nanoFramework.Iot.Device.KeyMatrix.1.2.329\lib\Iot.Device.KeyMatrix.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib">
       <HintPath>packages\nanoFramework.CoreLibrary.1.14.2\lib\mscorlib.dll</HintPath>
     </Reference>
@@ -49,6 +52,9 @@
     <Reference Include="nanoFramework.Runtime.Events">
       <HintPath>packages\nanoFramework.Runtime.Events.1.11.6\lib\nanoFramework.Runtime.Events.dll</HintPath>
     </Reference>
+    <Reference Include="nanoFramework.System.Collections">
+      <HintPath>packages\nanoFramework.System.Collections.1.5.18\lib\nanoFramework.System.Collections.dll</HintPath>
+    </Reference>
     <Reference Include="nanoFramework.System.Text">
       <HintPath>packages\nanoFramework.System.Text.1.2.37\lib\nanoFramework.System.Text.dll</HintPath>
     </Reference>
@@ -64,8 +70,14 @@
     <Reference Include="System.Device.Spi">
       <HintPath>packages\nanoFramework.System.Device.Spi.1.3.37\lib\System.Device.Spi.dll</HintPath>
     </Reference>
+    <Reference Include="System.Device.Wifi">
+      <HintPath>packages\nanoFramework.System.Device.Wifi.1.5.54\lib\System.Device.Wifi.dll</HintPath>
+    </Reference>
     <Reference Include="System.Net">
       <HintPath>packages\nanoFramework.System.Net.1.10.52\lib\System.Net.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading">
+      <HintPath>packages\nanoFramework.System.Threading.1.1.19\lib\System.Threading.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -1,22 +1,15 @@
 // Copyright kruglov.valentine@gmail.com KruglovVS.
 
-using System.Text;
-using System.Collections;
 using nanoFramework.M2Mqtt;
-using nanoFramework.Networking;
-using System.Security.Cryptography.X509Certificates;
 using nanoFramework.M2Mqtt.Messages;
-
-using DataNS;
-
-// Read:
-// https://github.com/nanoframework/nanoFramework.m2mqtt
-// https://github.com/nanoframework/Samples/blob/main/samples/MQTT
-// https://github.com/nanoframework/Samples/tree/main/samples/Wifi
+using nanoFramework.Networking;
+using System;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
 
 namespace NetworkNS
 {
-    public class NetworkController
+    public static class NetworkController
     {
         private static Connections.Wifi s_wifi;
         private static Clients.Mqtt s_mqtt;
@@ -27,36 +20,24 @@ namespace NetworkNS
                 s_mqtt = new Clients.Mqtt(Constants.Mqtt.Ip, Constants.Mqtt.Port, Constants.Mqtt.UsingSecure,
                 Constants.Mqtt.CaCert, Constants.Mqtt.ClientCert, Constants.Mqtt.MqttSslProtocol,
                 Constants.Mqtt.clientID, Constants.Mqtt.Username, Constants.Mqtt.Password,
-                Constants.Mqtt.Topics.Subscribed);
-        }
-        public static Data.Network Get()
-        {
-                if (!IsConnected)
-                {
-                    if (!Reconnect()) { return null; }
-                }
-                return s_mqtt.Received;
-        }
-        public static bool Send(Data.Network data)
-        {
-            if (!IsConnected)
-            {
-                if (!Reconnect()) { return false; }
-            }
-            foreach (DictionaryEntry topicMessage in data.TopicMessages)
-            {
-                if (!s_mqtt.Publish((string)topicMessage.Key, (string)topicMessage.Value))
-                {
-                    return false;
-                }
-            }
-            return true;
+                Topics.Subscribed);
         }
         public static bool IsConnected
         {
             get
             {
                 return s_mqtt.IsConnected && s_wifi.IsConnected;
+            }
+            set
+            {
+                if (value)
+                {
+                    Reconnect();
+                }
+                else
+                {
+                    Disconnect();
+                }
             }
         }
         public static void Disconnect()
@@ -76,7 +57,32 @@ namespace NetworkNS
             }
             return IsConnected;
         }
+        public static bool Send(string topic, string message)
+        {
+            if (!IsConnected)
+            {
+                if (!Reconnect()) { return false; }
+            }
+            return s_mqtt.Publish(topic, message);
+        }
 
+        public class GotEventArgs : EventArgs
+        {
+            public string Topic { get; set; }
+            public string Message { get; set; }
+            public GotEventArgs(string topic, string message)
+            {
+                Topic = topic;
+                Message = message;
+            }
+        }
+        public static event EventHandler<GotEventArgs> Got;
+
+        public static class Topics
+        {
+            public static readonly string[] Subscribed = { "/Instructions", "/Boot" };
+            public static readonly string[] Publishing = { "/GameData" };
+        }
         private static class Constants
         {
             public static class Wifi
@@ -96,25 +102,18 @@ namespace NetworkNS
                 public static readonly string clientID = "client";
                 public static readonly string Username = "username";
                 public static readonly string Password = "password";
-
-                public static class Topics
-                {
-                    public static readonly string[] Subscribed = { "/Instructions", "/Boot" };
-                    public static readonly string[] Publishing = { "/GameData" };
-                }
             }
         }
         private class Clients
         {
             public interface IClient
             {
-                public bool IsConnected { get; }
-                public void Disconnect();
-                public bool Reconnect();
                 public bool Publish(string topic, string message);
                 public void Subscribe(string topic);
                 public void Unsubscribe(string topic);
-                public Data.Network Received { get; }
+                public bool IsConnected { get; }
+                public void Disconnect();
+                public bool Reconnect();
             }
             public class Mqtt : MqttClient, IClient
             {
@@ -130,7 +129,7 @@ namespace NetworkNS
                     _username = username;
                     _password = password;
                     ProtocolVersion = MqttProtocolVersion.Version_5;
-                    MqttMsgPublishReceived += (object sender, MqttMsgPublishEventArgs e) => Received.Add(e.Topic, Encoding.UTF8.GetString(e.Message, 0, e.Message.Length));
+                    MqttMsgPublishReceived += (sender, e) => { Got.Invoke(s_mqtt, new GotEventArgs(e.Topic, Encoding.UTF8.GetString(e.Message, 0, e.Message.Length))); };
                     Connect(clientID, username, password);
                     foreach (string topic in topicsSubscribe)
                     {
@@ -154,7 +153,6 @@ namespace NetworkNS
                 {
                     return Connect(_clientID, _username, _password) == MqttReasonCode.Success;
                 }
-                public Data.Network Received { get; private set; }
             }
         }
         private class Connections

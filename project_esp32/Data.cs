@@ -1,12 +1,6 @@
 // copyright kruglovvs kruglov.valentine@gmail.com
 
 using System;
-using System.Collections;
-using System.Device.Gpio;
-using System.Device.I2c;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading;
 
 namespace DataNS
 {
@@ -15,27 +9,6 @@ namespace DataNS
         public interface IData
         {
 
-        }
-        public class Network : IData
-        {
-            private ArrayList TopicMessagesArrayList { get; set; }
-            public TopicMessage[] TopicMessages
-            {
-                get
-                {
-                    return (DictionaryEntry[])TopicMessagesArrayList.ToArray();
-                }
-            }
-            public class TopicMessage
-            {
-                public string Topic { get; set; }
-                public string Message { get; set; }
-                public void Add(string topic, string message)
-                {
-                    TopicMessagesArrayList.Add(new DictionaryEntry(topic, message));
-                }
-                // DictionaryEntry[]: topic and message strings.
-            }
         }
         public class Periphery : IData
         {

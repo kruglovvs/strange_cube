@@ -1,31 +1,25 @@
 // copyright kruglovvs kruglov.valentine@gmail.com
 
+using DataNS;
+using Iot.Device.Button;
+using Iot.Device.KeyMatrix;
+using nanoFramework.Hardware.Esp32;
+using nanoFramework.UI;
 using System;
 using System.Device.Gpio;
 using System.Device.I2c;
-using System.Device.Spi;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading;
-using Iot.Device.Button;
-using nanoFramework.Hardware.Esp32;
-using nanoFramework.UI;
-
-using DataNS;
-using System.Runtime.CompilerServices;
 using System.Drawing;
-using nanoFramework.Presentation.Controls;
-using nanoFramework.Presentation.Media;
-using static DataNS.Data.Periphery;
 
 namespace PeripheryNS
 {
-    public class PeripheryController
+    public static class PeripheryController
     {
 
-        private static GpioController GpioController = new GpioController();
+        private static GpioController s_gpioController = new GpioController();
 
         private static Sensors.Button[] _buttons;
+        private static Sensors.ButtonMatrix _matrix;
         private static Sensors.SimpleSensor _photoSensor;
         private static Sensors.SimpleSensor _vibrationSensor;
         private static Sensors.SimpleSensor _gasSensor;
@@ -38,10 +32,12 @@ namespace PeripheryNS
 
         static PeripheryController()
         {
+            s_gpioController = new GpioController();
             _buttons = new Sensors.Button[Constants.Counts.Buttons];
-            _photoSensor = new Sensors.SimpleSensor(Constants.Pins.PhotoSensor);
-            _vibrationSensor = new Sensors.SimpleSensor(Constants.Pins.VibrationSensor);
-            _gasSensor = new Sensors.SimpleSensor(Constants.Pins.GasSensor);
+            _matrix = new Sensors.ButtonMatrix(Constants.Pins.ButtonsIn, Constants.Pins.ButtonsOut);
+            _photoSensor = new Sensors.PhotoSensor(Constants.Pins.PhotoSensor);
+            _vibrationSensor = new Sensors.VibrationSensor(Constants.Pins.VibrationSensor);
+            _gasSensor = new Sensors.GasSensor(Constants.Pins.GasSensor);
             _tmp112 = new Sensors.TMP112(Constants.Adresses.TMP112);
             _lsm6 = new Sensors.LSM6(Constants.Adresses.LSM6);
             _vibrationMotor = new Actuators.Mechanical(Constants.Pins.VibrationMotor);
@@ -53,18 +49,19 @@ namespace PeripheryNS
                 _buttons[i] = new Sensors.Button(Constants.Pins.Buttons[i]);
             }
         }
-        public bool IsTurnedOn
+        public static bool IsTurnedOn
         {
             get
             {
-
+                return IsTurnedOn;
             }
             set 
             { 
-
+                _display.ACs = !value;
+                _matrix.IsListening = value;
             }
         }
-        public Data.Periphery.Image Image
+        public static Data.Periphery.Image Image
         {
             set
             {
@@ -73,18 +70,24 @@ namespace PeripheryNS
 
         public class ButtonPressedEventArgs : EventArgs
         {
-            public int Number;
+            public int PinNumber { get; set; }
+            public ButtonPressedEventArgs(int pinNumber) 
+            {
+                PinNumber = pinNumber;
+            }
         }
-        public event EventHandler<ButtonPressedEventArgs> ButtonPressed;
-        public event EventHandler GasSensored;
-        public event EventHandler TemperatureSensored;
-        public event EventHandler PhotoSensored;
+        public static event EventHandler<ButtonPressedEventArgs> ButtonPressed;
+        public static event EventHandler PhotoSensored;
+        public static event EventHandler VibrationSensored;
+        public static event EventHandler GasSensored;
+        public static event EventHandler TemperatureAlertSensored;
 
         private static class Constants
         {
             public static class Counts
             {
-                public const int Buttons = 12;
+                public const int Buttons = 2;
+                public const int ButtonMatrix = 3;
                 public const int Luminodiodes = 9;
                 public static class PixelBytes
                 {
@@ -99,7 +102,9 @@ namespace PeripheryNS
             }
             public static class Pins
             {
-                public static readonly int[] Buttons = new int[Counts.Buttons] { 15, 2, 4, 404, 404, 5, 18, 404, 404, 33, 25, 26 }; //исправить
+                public static readonly int[] Buttons = new int[Counts.Buttons] { 15, 2 }; //исправить
+                public static readonly int[] ButtonsIn = new int[Counts.ButtonMatrix] { 404, 404, 404 };
+                public static readonly int[] ButtonsOut = new int[Counts.ButtonMatrix] { 404, 404, 404 };
                 public const int Luminoides = 34;
                 public const int PhotoSensor = 27;
                 public const int VibrationSensor = 35;
@@ -119,6 +124,8 @@ namespace PeripheryNS
             public static class PinModes
             {
                 public static readonly PinMode Button = PinMode.Input;
+                public static readonly PinMode ButtonIn = PinMode.Input;
+                public static readonly PinMode ButtonOut = PinMode.OutputOpenDrainPullUp;
                 public static readonly PinMode SimpleSensor = PinMode.Input;
                 public static readonly PinMode Mechanical = PinMode.Output;
                 public static readonly PinMode Luminodiodes = PinMode.OutputOpenSourcePullDown;
@@ -128,6 +135,7 @@ namespace PeripheryNS
             }
             public static class PinStartValues
             {
+                public static readonly PinValue ButtonOut = PinValue.High;
                 public static readonly PinValue Mechanical = PinValue.Low;
                 public static readonly PinValue Luminodiodes = PinValue.Low;
                 public static readonly PinValue A0 = PinValue.High;
@@ -143,54 +151,115 @@ namespace PeripheryNS
                 public const byte TMP112 = 0b1001001;
                 public const byte LSM6 = 0b1001001;
             }
+            public static class Time
+            {
+                public static readonly TimeSpan Debounce = new TimeSpan(10);
+            }
         }
         private class Sensors
         {
             public interface ISimpleSensor
             {
                 public GpioPin Pin { get; init; }
-                public event EventHandler Sensored;
+                public bool Sensor { get; }
             }
-            public class SimpleSensor : ISimpleSensor
+            public abstract class SimpleSensor : ISimpleSensor
             {
                 public GpioPin Pin { get; init; }
                 public SimpleSensor(int pinNumber)
                 {
-                    Pin = GpioController.OpenPin(pinNumber, Constants.PinModes.SimpleSensor);
-                    Pin.ValueChanged += (s, e) =>
+                    Pin = s_gpioController.OpenPin(pinNumber, Constants.PinModes.SimpleSensor);
+                    Pin.ValueChanged += (sender, e) =>
                     {
-                        if((bool)Pin.Read()) { 
+                        if((bool)Pin.Read()) 
+                        { 
                             this.Sensored.Invoke(this, new EventArgs());
-                        }
+                        } 
                     };
                 }
                 public event EventHandler Sensored;
-                public event EventHandler Unsensored;
-            }
-            public class Button : GpioButton, ISimpleSensor
-            {
-                public int Pin { get; init; }
-                public bool Value
+                public bool Sensor
                 {
                     get
                     {
-                        if (Value)
-                        {
-                            Value = false;
-                            return true;
-                        }
-                        return false;
-                    }
-                    private set
-                    {
-                        Value = value;
+                        return (bool)Pin.Read();
                     }
                 }
-                public Button(int pinNumber) : base(pinNumber, GpioController, true, Constants.PinModes.Button)
+            }
+            public class PhotoSensor : SimpleSensor
+            {
+                public PhotoSensor (int pinNumber) : base(pinNumber)
                 {
-                    this.IsDoublePressEnabled = false; // it can be changed
-                    this.IsHoldingEnabled = false; // it can be changed
-                    this.ButtonDown += (sender, e) => { Value = true; };
+                    Sensored += (sender, e) => PhotoSensored.Invoke(this, new EventArgs());
+                }
+            }
+            public class VibrationSensor : SimpleSensor
+            {
+                public VibrationSensor(int pinNumber) : base(pinNumber)
+                {
+                    Sensored += (sender, e) => VibrationSensored.Invoke(this, new EventArgs());
+                }
+            }
+            public class GasSensor : SimpleSensor
+            {
+                public GasSensor(int pinNumber) : base(pinNumber)
+                {
+                    Sensored += (sender, e) => GasSensored.Invoke(this, new EventArgs());
+                }
+            }
+            public class Button : GpioButton, ISimpleSensor
+            {
+                public GpioPin Pin { get; init; }
+                public Button(int pinNumber) : base(pinNumber, s_gpioController, true, Constants.PinModes.Button, Constants.Time.Debounce)
+                {
+                    IsDoublePressEnabled = false; 
+                    IsHoldingEnabled = false; 
+                    IsPressed = true;
+                    Press += (sender, e) => { ButtonPressed.Invoke(this,  new ButtonPressedEventArgs(Pin.PinNumber + 100)); } ;
+                }
+                public bool Sensor
+                {
+                    get
+                    {
+                        return (bool)Pin.Read();
+                    }
+                }
+            }
+            public interface IButtonMatrix
+            {
+                public bool IsListening { get; set; }
+            }
+            public class ButtonMatrix : KeyMatrix, IButtonMatrix
+            {
+                public ButtonMatrix(int[] pinNumbersIn, int[] pinNumbersOut) : base (pinNumbersOut, pinNumbersIn, Constants.Time.Debounce, s_gpioController, true)
+                {
+                    if (pinNumbersIn.Length != pinNumbersOut.Length)
+                    {
+                        throw new Exception("Matrix should be a square");
+                    }
+                    KeyEvent += (sender, e) => 
+                    {
+                        ButtonPressed.Invoke(this, new ButtonPressedEventArgs(e.Input + e.Output * pinNumbersIn.Length));
+                    };
+                    IsListening = true;
+                }
+                public bool IsListening 
+                { 
+                    get 
+                    { 
+                        return IsListening; 
+                    } 
+                    set 
+                    {
+                        if (value)
+                        {
+                            StartListeningKeyEvent();
+                        }
+                        else
+                        {
+                            StopListeningKeyEvent();
+                        }
+                    }
                 }
             }
             public interface II2cSensor
@@ -240,7 +309,17 @@ namespace PeripheryNS
             }
             public class TMP112 : I2cSensor, II2cSensor
             {
-                public TMP112(int address) : base(address) { }
+                GpioPin Alert { get; init; }
+                public TMP112(int address) : base(address)
+                {
+                    Alert.ValueChanged += (sender, e) =>
+                    {
+                        if ((bool)Alert.Read())
+                        {
+                            TemperatureAlertSensored.Invoke(this, new EventArgs());
+                        }
+                    };
+                }
                 public static class Registers
                 {
                     public const byte Temperature = 0x0;
@@ -330,7 +409,7 @@ namespace PeripheryNS
                 public int PinNumber { get; init; }
                 public Mechanical(int pinNumber)
                 {
-                    GpioController.OpenPin(pinNumber, Constants.PinModes.Mechanical);
+                    s_gpioController.OpenPin(pinNumber, Constants.PinModes.Mechanical);
                     PinNumber = pinNumber;
                 }
                 public bool IsActing
@@ -341,7 +420,7 @@ namespace PeripheryNS
                     }
                     set
                     {
-                        GpioController.Write(PinNumber, (PinValue)value);
+                        s_gpioController.Write(PinNumber, (PinValue)value);
                         IsActing = value;
                     }
                 }
@@ -362,7 +441,7 @@ namespace PeripheryNS
                 public int PinNumber { get; init; }
                 public Luminodiodes(int pinNumber, int countPixels)
                 {
-                    GpioController.OpenPin(pinNumber, Constants.PinModes.Luminodiodes);
+                    s_gpioController.OpenPin(pinNumber, Constants.PinModes.Luminodiodes);
                     PinNumber = pinNumber;
                     CountPixels = countPixels;
 
@@ -391,30 +470,59 @@ namespace PeripheryNS
             {
                 public static int CountPixelBytes { get; } = Constants.Counts.PixelBytes.St7565WO12864;
                 public int CountPixels { get; } = Constants.Counts.CountPixels.St7565WO12864;
-                public static class StateA0
+                private static class StateA0
                 {
                     public static readonly PinValue Data = PinValue.High;
                     public static readonly PinValue Control = PinValue.Low;
                 }
-                public int PinNumberA0 { get; init; }
-                public int PinNumberARes { get; init; }
-                public int PinNumberACs { get; init; }
+                public GpioPin PinA0 { get; init; }
+                public GpioPin PinARes { get; init; }
+                public GpioPin PinACs { get; init; }
+                private bool A0
+                {
+                    get
+                    {
+                        return A0;
+                    }
+                    set
+                    {
+                        PinA0.Write(value);
+                    }
+                }
+                private bool ARes
+                {
+                    get
+                    {
+                        return ARes;
+                    }
+                    set
+                    {
+                        PinARes.Write(value);
+                    }
+                }
+                public bool ACs
+                {
+                    get
+                    {
+                        return ACs;
+                    }
+                    set
+                    {
+                        PinACs.Write(value);
+                    }
+                }
                 public St7565WO12864(int pinNumberA0, int pinNumberARes, int pinNumberACs) : base(new SpiConfiguration(1, -1, -1, -1, -1), new ScreenConfiguration(0, 0, Parameters.Width, Parameters.Height, GraphicDriver), 128 * 64)
                 {
-                    PinNumberA0 = pinNumberA0;
-                    PinNumberARes = pinNumberARes;
-                    PinNumberACs = pinNumberACs;
-                    OpenPin(pinNumberA0,  )
-                    GpioController.OpenPin(pinNumberA0, Constants.PinModes.A0);
-                    GpioController.Write(pinNumberA0, PinValue.High);
-                    GpioController.OpenPin(pinNumberARes, Constants.PinModes.ARes);
-                    GpioController.Write(pinNumberARes, PinValue.High);
-                    GpioController.OpenPin(pinNumberACs, Constants.PinModes.ACs);
-                    GpioController.Write(pinNumberACs, PinValue.Low);
+                    PinA0 = s_gpioController.OpenPin(pinNumberA0, Constants.PinModes.A0);
+                    s_gpioController.Write(pinNumberA0, Constants.PinStartValues.A0);
+                    PinARes = s_gpioController.OpenPin(pinNumberARes, Constants.PinModes.ARes);
+                    s_gpioController.Write(pinNumberARes, Constants.PinStartValues.ARes);
+                    PinACs = s_gpioController.OpenPin(pinNumberACs, Constants.PinModes.ACs);
+                    s_gpioController.Write(pinNumberACs, Constants.PinStartValues.ACs);
                 }
                 public void WritePoint(ushort x, ushort y)
                 {
-                    GpioController.Write(PinNumberA0, StateA0.Data);
+                    PinA0.Write(StateA0.Data);
                     DisplayControl.WritePoint(x, y, Color.Black);
                 }
                 public static class Registers
