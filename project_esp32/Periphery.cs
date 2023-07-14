@@ -10,6 +10,7 @@ using System.Device.Gpio;
 using System.Device.I2c;
 using System.Diagnostics;
 using System.Drawing;
+using System.Threading;
 
 namespace PeripheryNS
 {
@@ -18,36 +19,39 @@ namespace PeripheryNS
 
         private static GpioController s_gpioController = new GpioController();
 
-        private static Sensors.Button[] _buttons;
-        private static Sensors.ButtonMatrix _matrix;
-        private static Sensors.SimpleSensor _photoSensor;
-        private static Sensors.SimpleSensor _vibrationSensor;
-        private static Sensors.SimpleSensor _gasSensor;
-        private static Sensors.TMP112 _tmp112;
-        private static Sensors.LSM6 _lsm6;
-        private static Actuators.Mechanical _vibrationMotor;
-        private static Actuators.Mechanical _door;
-        private static Displays.St7565WO12864 _display;
-        private static Displays.Luminodiodes _luminodiodes;
+        private static Sensors.Button[] s_buttons;
+        private static Sensors.ButtonMatrix s_matrix;
+        private static Sensors.SimpleSensor s_photoSensor;
+        private static Sensors.SimpleSensor s_vibrationSensor;
+        private static Sensors.SimpleSensor s_gasSensor;
+        private static Sensors.TMP112 s_tmp112;
+        private static Sensors.LSM6 s_lsm6;
+        private static Actuators.Mechanical s_vibrationMotor;
+        private static Actuators.Mechanical s_door;
+        private static Displays.St7565WO12864 s_display;
+        private static Displays.Luminodiodes s_luminodiodes;
 
         static PeripheryController()
         {
             s_gpioController = new GpioController();
-            _buttons = new Sensors.Button[Constants.Counts.Buttons];
-            _matrix = new Sensors.ButtonMatrix(Constants.Pins.ButtonsIn, Constants.Pins.ButtonsOut);
-            _photoSensor = new Sensors.PhotoSensor(Constants.Pins.PhotoSensor);
-            _vibrationSensor = new Sensors.VibrationSensor(Constants.Pins.VibrationSensor);
-            _gasSensor = new Sensors.GasSensor(Constants.Pins.GasSensor);
-            _tmp112 = new Sensors.TMP112(Constants.Adresses.TMP112);
-            _lsm6 = new Sensors.LSM6(Constants.Adresses.LSM6);
-            _vibrationMotor = new Actuators.Mechanical(Constants.Pins.VibrationMotor);
-            _door = new Actuators.Mechanical(Constants.Pins.Door);
-            _display = new Displays.St7565WO12864(Constants.Pins.A0, Constants.Pins.ARes, Constants.Pins.ACs);
-            _luminodiodes = new Displays.Luminodiodes(Constants.Pins.Luminoides, Constants.Counts.Luminodiodes);
+            s_buttons = new Sensors.Button[Constants.Counts.Buttons];
+            s_matrix = new Sensors.ButtonMatrix(Constants.Pins.ButtonsIn, Constants.Pins.ButtonsOut);
+            s_photoSensor = new Sensors.PhotoSensor(Constants.Pins.PhotoSensor);
+            s_vibrationSensor = new Sensors.VibrationSensor(Constants.Pins.VibrationSensor);
+            s_gasSensor = new Sensors.GasSensor(Constants.Pins.GasSensor);
+            s_tmp112 = new Sensors.TMP112(Constants.Adresses.TMP112);
+            s_lsm6 = new Sensors.LSM6(Constants.Adresses.LSM6);
+            s_vibrationMotor = new Actuators.Mechanical(Constants.Pins.VibrationMotor);
+            s_door = new Actuators.Mechanical(Constants.Pins.Door);
+            s_display = new Displays.St7565WO12864(Constants.Pins.A0, Constants.Pins.ARes, Constants.Pins.ACs);
+            s_luminodiodes = new Displays.Luminodiodes(Constants.Pins.Luminoides, Constants.Counts.Luminodiodes);
             for (int i = 0; i < Constants.Counts.Buttons; i++)
             {
-                _buttons[i] = new Sensors.Button(Constants.Pins.Buttons[i]);
+                s_buttons[i] = new Sensors.Button(Constants.Pins.Buttons[i]);
             }
+            IsTurnedOn = true;
+            IsOpened = false;
+            IsVibrating = false;
         }
         public static bool IsTurnedOn
         {
@@ -57,8 +61,39 @@ namespace PeripheryNS
             }
             set 
             { 
-                _display.ACs = !value;
-                _matrix.IsListening = value;
+                s_display.IsTurnedOn = !value;
+                s_matrix.IsListening = value;
+                IsDisplaying = value;
+                if (!value)
+                {
+                    IsOpened = false;
+                    IsVibrating = false;
+                }
+            }
+        }
+        public static bool IsOpened
+        {
+            get { return s_door.IsActing; }
+            set
+            {
+                s_door.IsActing = value;
+            }
+        }
+        public static bool IsVibrating
+        {
+            get { return s_vibrationMotor.IsActing; }
+            set
+            {
+                s_vibrationMotor.IsActing = value;
+            }
+        }
+        public static bool IsDisplaying
+        {
+            get { return s_display.IsTurnedOn; }
+            set
+            {
+                s_display.IsTurnedOn = value;
+                s_luminodiodes.IsTurnedOn = value;
             }
         }
         public static Data.Periphery.Image Image
@@ -154,6 +189,7 @@ namespace PeripheryNS
             public static class Time
             {
                 public static readonly TimeSpan Debounce = new TimeSpan(10);
+                public static readonly TimeSpan SetARes = new TimeSpan(10);
             }
         }
         private class Sensors
@@ -401,16 +437,17 @@ namespace PeripheryNS
         {
             public interface IActuator
             {
-                public int PinNumber { get; init; }
+                public GpioPin Pin { get; init; }
                 public bool IsActing { get; set; }
             }
             public class Mechanical : IActuator
             {
-                public int PinNumber { get; init; }
+                public GpioPin Pin { get; init; }
                 public Mechanical(int pinNumber)
                 {
-                    s_gpioController.OpenPin(pinNumber, Constants.PinModes.Mechanical);
-                    PinNumber = pinNumber;
+                    Pin = s_gpioController.OpenPin(pinNumber, Constants.PinModes.Mechanical);
+                    Pin.Write(Constants.PinStartValues.Mechanical);
+                    IsActing = (bool)Constants.PinStartValues.Mechanical;
                 }
                 public bool IsActing
                 {
@@ -420,7 +457,7 @@ namespace PeripheryNS
                     }
                     set
                     {
-                        s_gpioController.Write(PinNumber, (PinValue)value);
+                        Pin.Write((PinValue)value);
                         IsActing = value;
                     }
                 }
@@ -438,19 +475,30 @@ namespace PeripheryNS
             {
                 public static int CountPixelBytes { get; } = Constants.Counts.PixelBytes.Luminodiodes;
                 public int CountPixels { get; init; }
-                public int PinNumber { get; init; }
+                public GpioPin Pin { get; init; }
                 public Luminodiodes(int pinNumber, int countPixels)
                 {
-                    s_gpioController.OpenPin(pinNumber, Constants.PinModes.Luminodiodes);
-                    PinNumber = pinNumber;
+                    Pin = s_gpioController.OpenPin(pinNumber, Constants.PinModes.Luminodiodes);
+                    Pin.Write(Constants.PinStartValues.Luminodiodes);
                     CountPixels = countPixels;
-
+                    IsTurnedOn = (bool)Constants.PinStartValues.Luminodiodes;
                 }
                 public byte[] Image
                 {
                     set
                     {
                         // I should create dll driver for 1-wire luminodiodes
+                    }
+                }
+                public bool IsTurnedOn
+                {
+                    get { return IsTurnedOn; }
+                    set
+                    {
+                        if (!value)
+                        {
+                            Image = new byte[CountPixels];
+                        }
                     }
                 }
             }
@@ -468,6 +516,19 @@ namespace PeripheryNS
             }
             public class St7565WO12864 : SpiDisplay, IDisplay
             {
+                public bool IsTurnedOn
+                {
+                    get { return IsTurnedOn; }
+                    set
+                    {
+                        PinACs.Write(value);
+                        if (!IsTurnedOn && value) 
+                        {
+                            PinARes.Write(PinValue.Low);
+                            Thread.Sleep(Constants.Time.SetARes);
+                        }
+                    }
+                }
                 public static int CountPixelBytes { get; } = Constants.Counts.PixelBytes.St7565WO12864;
                 public int CountPixels { get; } = Constants.Counts.CountPixels.St7565WO12864;
                 private static class StateA0
@@ -519,6 +580,7 @@ namespace PeripheryNS
                     s_gpioController.Write(pinNumberARes, Constants.PinStartValues.ARes);
                     PinACs = s_gpioController.OpenPin(pinNumberACs, Constants.PinModes.ACs);
                     s_gpioController.Write(pinNumberACs, Constants.PinStartValues.ACs);
+                    IsTurnedOn = (bool)Constants.PinStartValues.ACs;
                 }
                 public void WritePoint(ushort x, ushort y)
                 {
@@ -546,7 +608,7 @@ namespace PeripheryNS
                     Memory_Access_Control = 0x36,
                     Pixel_Format_Set = 0x3A,
                     Memory_Write_Continue = 0x3C,
-                    Write_Display_Brightness = 0x51,
+                    Writes_display_Brightness = 0x51,
                     Frame_Rate_Control_Normal = 0xB1,
                     Frame_Rate_Control_2 = 0xB2,
                     Frame_Rate_Control_3 = 0xB3,
@@ -636,7 +698,7 @@ namespace PeripheryNS
                                                         (byte)GraphicDriverCommandType.Command, 3, (byte)Registers.POWER_STATE, 0x00, 0x01,
                                                     },
                     DefaultOrientation = DisplayOrientation.Landscape,
-                    Brightness = (byte)Registers.Write_Display_Brightness,
+                    Brightness = (byte)Registers.Writes_display_Brightness,
                 };*/
             }
         }
