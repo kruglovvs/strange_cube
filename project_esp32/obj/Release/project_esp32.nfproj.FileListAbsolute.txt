@@ -1,2 +1,0 @@
-C:\vulkan\practika2023\strange_cube\project_esp32\obj\Release\project_esp32.nfproj.AssemblyReference.cache
-C:\vulkan\practika2023\strange_cube\project_esp32\obj\Release\project_esp32.nfproj.CoreCompileInputs.cache
