@@ -1,41 +1,62 @@
-using Network;
-using Periphery;
+using System;
 using System.Diagnostics;
 using System.Threading;
 using System.Device.Gpio;
 using Iot.Device.Button;
+using nanoFramework.Hardware.Esp32;
+using Iot.Device.KeyMatrix;
+using nanoFramework.Networking;
+using nanoFramework.M2Mqtt;
+using nanoFramework.M2Mqtt.Messages;
+using System.IO;
+using System.Collections;
 
 namespace ProjectESP32
 {
-    public class Program
-    {
-        internal static GpioController GpioController = new GpioController();
+    public class Program {
+
+        public enum Instruction : byte {
+            Rotate,
+            Accelate,
+            HeatUp,
+            CoolDown,
+            Illuminate,
+            Darken,
+            Vibrate,
+            Smoke,
+            ButtonPress,
+        }
+        private static Queue _instructions { get; set; } = new Queue();
+        private static void Win() {
+            Periphery.SetDisplay(new byte[128 * 64]);
+            Periphery.SetLuminodiodds(new byte[9 * 3]);
+            Periphery.OpenDoor();
+            Periphery.Vibrate(1500);
+            Network.Publish("/GameData", "Win!");
+        }
+        private static void WriteInstructions(byte[] instructionBytes) {
+            _instructions.Clear();
+            foreach (Instruction instruction in instructionBytes) {
+                _instructions.Enqueue(instruction);
+            }
+        }
         public static void Main()
         {
-            //  Open all pins.
+            Periphery.TurnOn();
+            Network.TurnOn();
 
-            GpioController.OpenPin(12, PinMode.Output); // A0.
-            GpioController.OpenPin(13, PinMode.Output); // MOSI.
-            GpioController.OpenPin(14, PinMode.Output); // CLK.
-            GpioController.OpenPin(15, PinMode.Output); // BOut1.
-            GpioController.OpenPin(16, PinMode.Input);  // BIn3.
-            GpioController.OpenPin(17, PinMode.Input);  // BIn2.
-            GpioController.OpenPin(19, PinMode.Input);  // Int1.
-            GpioController.OpenPin(21, PinMode.Output); // SDA.
-            GpioController.OpenPin(22, PinMode.Output); // SCL.
-            GpioController.OpenPin(23, PinMode.Input);  // Int2.
-            GpioController.OpenPin(26, PinMode.Output); // ARes.
-            GpioController.OpenPin(27, PinMode.Output); // ACs.
+            Network.GotInstructions = WriteInstructions;
 
-            GpioController.OpenPin(34, PinMode.Output); // Door.
-            GpioController.OpenPin(35, PinMode.Output); // VibrationMotor.
-
-            GpioController.OpenPin(25, PinMode.Input).ValueChanged += (sender, e) => { Debug.WriteLine("1"); };  // PhotoSensor.
-            GpioController.OpenPin(36, PinMode.Input).ValueChanged += (sender, e) => { Debug.WriteLine("1"); };  // GasSensor.
-            GpioController.OpenPin(39, PinMode.Input).ValueChanged += (sender, e) => { Debug.WriteLine("1"); };  // VibrationSensor.
-
-            new GpioButton(33, GpioController, false).Press += (sender, e) => { Debug.WriteLine("1"); }; // B1
-            new GpioButton(32, GpioController, false).Press += (sender, e) => { Debug.WriteLine("1"); }; // B2
+            Periphery.Action = (e) => 
+            { 
+                Debug.WriteLine($"action: {e}"); 
+                if (e == (Instruction)_instructions.Peek()) {
+                    _instructions.Dequeue();
+                }
+                if (_instructions.Count == 0) {
+                    Win();
+                }
+            };
         }
     }
 }
