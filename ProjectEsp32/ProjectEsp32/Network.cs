@@ -1,3 +1,4 @@
+using nanoFramework.Hardware.Esp32;
 using nanoFramework.M2Mqtt;
 using nanoFramework.M2Mqtt.Messages;
 using nanoFramework.Networking;
@@ -8,12 +9,14 @@ using System.Text;
 namespace ProjectESP32 {
     public static class Network {
         private static MqttClient s_mqtt { get; set; }
-
         public static DelegateGotInstructions GotInstructions { get; set; }
         public static void TurnOn() 
         {
+            Debug.WriteLine("Start Network");
             WifiNetworkHelper.ConnectDhcp("Guest_WiFi", "NeRm25:)KmwQ");
+            Debug.WriteLine("Connected wifi");
             s_mqtt = new MqttClient("10.0.41.64", 1883, false, null, null, MqttSslProtocols.None);
+            Debug.WriteLine("opened mqtt");
             try
             {
                 s_mqtt.Connect("Esp32");
@@ -21,7 +24,9 @@ namespace ProjectESP32 {
             {
                 Debug.WriteLine("Can't Connect to the mqtt broker");
             }
+            Debug.WriteLine("connected mqtt");
             s_mqtt.Subscribe(new string[] { "/Instructions", "/BootData" }, new MqttQoSLevel[] { MqttQoSLevel.ExactlyOnce, MqttQoSLevel.ExactlyOnce });
+            Debug.WriteLine("subscribed mqtt");
             s_mqtt.MqttMsgPublishReceived += (sender, e) =>
             {
                 Debug.WriteLine($"Got data: {e.Topic} : {Encoding.UTF8.GetString(e.Message, 0, e.Message.Length)}");
@@ -37,6 +42,7 @@ namespace ProjectESP32 {
                         break;
                 }
             };
+            Debug.WriteLine("Made event mqtt");
         }
         public static void Publish (string topic, string message) {
             try

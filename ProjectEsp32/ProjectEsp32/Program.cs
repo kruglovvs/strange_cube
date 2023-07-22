@@ -112,8 +112,11 @@ namespace ProjectESP32
         }
         public static void Main()
         {
+            Debug.WriteLine("Start main");
             Periphery.TurnOn();
+            Debug.WriteLine("Periphery turned on");
             Network.TurnOn();
+            Debug.WriteLine("Network turned on");
 
             Network.GotInstructions = WriteInstructions;
             Periphery.Action = CheckAction;
@@ -121,6 +124,8 @@ namespace ProjectESP32
             Network.Publish("/Instructions", new byte[] { (byte)Instruction.ButtonPress0 });
             Network.Publish("/GameData", $"check working");
             Network.Publish("/BootData", $"Die");
+
+            Debug.WriteLine("END");
         }
     }
 }

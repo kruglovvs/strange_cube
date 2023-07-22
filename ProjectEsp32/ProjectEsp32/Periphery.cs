@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using static ProjectESP32.Program;
+//using LuminodiodesInterop;
 
 namespace ProjectESP32 {
     public static class Periphery {
@@ -187,9 +188,11 @@ namespace ProjectESP32 {
             s_checkingTemperature.Start();
             s_checkingAccelation.Start();
             s_checkingRotation.Start();
+
+            //SetLuminodiodds(new byte[] { 0 });
         }
         public static void SetLuminodiodds(byte[] image) {
-            OneWireSendLuminodiodes(image, 2);
+            //LuminodiodesInterop.LuminodiodesInterop.OneWireSendLuminodiodes(image, 27);
         }
         public static void SetDisplay(byte[] image) {
             s_display.Write(new SpanByte(image));

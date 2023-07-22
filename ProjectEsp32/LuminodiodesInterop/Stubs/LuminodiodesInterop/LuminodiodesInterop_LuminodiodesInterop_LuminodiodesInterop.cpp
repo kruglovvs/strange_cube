@@ -17,7 +17,7 @@
 using namespace LuminodiodesInterop::LuminodiodesInterop;
 
 
-void LuminodiodesInterop::OneWireSendLuminodiodes( CLR_RT_TypedArray_UINT8 param0, unsigned int param1, HRESULT &hr )
+void LuminodiodesInterop::OneWireSendLuminodiodes(CLR_RT_TypedArray_UINT8 param0, unsigned int param1, HRESULT& hr)
 {
 
     (void)param0;
@@ -27,9 +27,11 @@ void LuminodiodesInterop::OneWireSendLuminodiodes( CLR_RT_TypedArray_UINT8 param
 
     ////////////////////////////////
     // implementation starts here //
-
-    CPU_GPIO_SetPinState((GPIO_PIN)param1, GpioPinValue.Low);
-
+    for (int i = 0; i < 100; ++i) {
+        CPU_GPIO_SetPinState(27, GpioPinValue.High);
+        for (int j = 0; j < 100; ++j) {}
+        CPU_GPIO_SetPinState(27, GpioPinValue.High);
+    }
     // implementation ends here   //
     ////////////////////////////////
 

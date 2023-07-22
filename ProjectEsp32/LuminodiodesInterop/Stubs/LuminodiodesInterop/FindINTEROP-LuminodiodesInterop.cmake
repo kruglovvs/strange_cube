@@ -10,7 +10,7 @@
 ########################################################################################
 
 # native code directory
-set(BASE_PATH_FOR_THIS_MODULE ${PROJECT_SOURCE_DIR}/InteropAssemblies/LuminodiodesInterop)
+set(BASE_PATH_FOR_THIS_MODULE "${BASE_PATH_FOR_CLASS_LIBRARIES_MODULES}/LuminodiodesInterop")
 
 
 # set include directories

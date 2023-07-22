@@ -31,6 +31,26 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Stubs\LuminodiodesInterop\.vs\cmake.db" />
+    <None Include="Stubs\LuminodiodesInterop\.vs\LuminodiodesInterop\FileContentIndex\7b42b2d0-d02a-40e4-93d3-7e86bc329ff7.vsidx" />
+    <None Include="Stubs\LuminodiodesInterop\.vs\LuminodiodesInterop\FileContentIndex\read.lock" />
+    <None Include="Stubs\LuminodiodesInterop\.vs\LuminodiodesInterop\v17\Browse.VC.db" />
+    <None Include="Stubs\LuminodiodesInterop\.vs\LuminodiodesInterop\v17\ipch\AutoPCH\433ea0387467ec57\LUMINODIODESINTEROP_LUMINODIODESINTEROP_LUMINODIODESINTEROP.ipch" />
+    <None Include="Stubs\LuminodiodesInterop\.vs\slnx.sqlite" />
+    <None Include="Stubs\LuminodiodesInterop\FindINTEROP-LuminodiodesInterop.cmake" />
+    <None Include="Stubs\LuminodiodesInterop\LuminodiodesInterop.cpp" />
+    <None Include="Stubs\LuminodiodesInterop\LuminodiodesInterop.h" />
+    <None Include="Stubs\LuminodiodesInterop\LuminodiodesInterop_LuminodiodesInterop_LuminodiodesInterop.cpp" />
+    <None Include="Stubs\LuminodiodesInterop\LuminodiodesInterop_LuminodiodesInterop_LuminodiodesInterop.h" />
+    <None Include="Stubs\LuminodiodesInterop\LuminodiodesInterop_LuminodiodesInterop_LuminodiodesInterop_mshl.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Stubs\LuminodiodesInterop\.vs\ProjectSettings.json" />
+    <Content Include="Stubs\LuminodiodesInterop\.vs\VSWorkspaceState.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Stubs\LuminodiodesInterop\.vs\LuminodiodesInterop\FileContentIndex\merges\" />
+    <Folder Include="Stubs\LuminodiodesInterop\.vs\LuminodiodesInterop\v17\ipch\AutoPCH\b238cb4ee166e34a\" />
   </ItemGroup>
   <Import Project="$(NanoFrameworkProjectSystemPath)NFProjectSystem.CSharp.targets" Condition="Exists('$(NanoFrameworkProjectSystemPath)NFProjectSystem.CSharp.targets')" />
   <ProjectExtensions>

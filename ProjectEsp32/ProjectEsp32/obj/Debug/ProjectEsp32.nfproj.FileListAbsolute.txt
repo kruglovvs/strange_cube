@@ -211,3 +211,6 @@ C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\De
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\System.IO.Streams.xml
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\System.Net.xml
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\System.Threading.xml
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\bin\Debug\ProjectEsp32.bin
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\ProjectEsp32.pe
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\ProjectEsp32.pdbx
