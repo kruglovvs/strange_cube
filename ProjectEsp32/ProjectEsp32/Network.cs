@@ -5,12 +5,15 @@ using nanoFramework.Networking;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 
-namespace ProjectESP32 {
-    public static class Network {
+namespace ProjectESP32
+{
+    public static class Network
+    {
         private static MqttClient s_mqtt { get; set; }
         public static DelegateGotInstructions GotInstructions { get; set; }
-        public static void TurnOn() 
+        public static void TurnOn()
         {
             Debug.WriteLine("Start Network");
             WifiNetworkHelper.ConnectDhcp("Guest_WiFi", "NeRm25:)KmwQ");
@@ -20,7 +23,8 @@ namespace ProjectESP32 {
             try
             {
                 s_mqtt.Connect("Esp32");
-            } catch
+            }
+            catch
             {
                 Debug.WriteLine("Can't Connect to the mqtt broker");
             }
@@ -33,9 +37,9 @@ namespace ProjectESP32 {
                 switch (e.Topic)
                 {
                     case "/BootData":
-                        //MemoryStream stream = new MemoryStream(e.Message);
-                        //stream.Flush();
-                        //stream.Close();
+                        MemoryStream stream = new MemoryStream(e.Message);
+                        stream.Flush();
+                        stream.Close();
                         break;
                     case "/Instructions":
                         GotInstructions?.Invoke(e.Message);
@@ -43,12 +47,24 @@ namespace ProjectESP32 {
                 }
             };
             Debug.WriteLine("Made event mqtt");
+            s_mqtt.ConnectionClosed += (sender, e) => { 
+                while (!s_mqtt.IsConnected) { 
+                    try { 
+                        s_mqtt.Connect("Esp32"); 
+                    } 
+                    catch { 
+                        Thread.Sleep(5000); 
+                    } 
+                } 
+            };
         }
-        public static void Publish (string topic, string message) {
+        public static void Publish(string topic, string message)
+        {
             try
             {
                 s_mqtt.Publish(topic, Encoding.UTF8.GetBytes(message), null, null, MqttQoSLevel.ExactlyOnce, false);
-            } catch
+            }
+            catch
             {
                 Debug.WriteLine("Can't publish message");
             }
@@ -57,7 +73,7 @@ namespace ProjectESP32 {
         {
             try
             {
-                s_mqtt.Publish(topic,message, null, null, MqttQoSLevel.ExactlyOnce, false);
+                s_mqtt.Publish(topic, message, null, null, MqttQoSLevel.ExactlyOnce, false);
             }
             catch
             {

@@ -214,3 +214,9 @@ C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\De
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\bin\Debug\ProjectEsp32.bin
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\ProjectEsp32.pe
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\ProjectEsp32.pdbx
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\bin\Debug\LuminodiodesInterop.pe
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\bin\Debug\LuminodiodesInterop.pdbx
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\bin\Debug\LuminodiodesInterop.dll
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\bin\Debug\LuminodiodesInterop.pdb
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\LuminodiodesInterop.dll
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\LuminodiodesInterop.pdb

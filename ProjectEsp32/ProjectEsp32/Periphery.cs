@@ -127,12 +127,13 @@ namespace ProjectESP32 {
         {
 
             //  Open all pins.
-            s_gpioController.OpenPin(12, PinMode.Output); // A0.
+            //s_gpioController.OpenPin(12, PinMode.Output); // A0.
             s_gpioController.OpenPin(26, PinMode.Output); // ARes.
-            s_gpioController.OpenPin(27, PinMode.Output); // ACs.
-            s_gpioController.OpenPin(13, PinMode.Output); // MOSI.
+            //s_gpioController.OpenPin(27, PinMode.Output); // ACs.
+            //s_gpioController.OpenPin(13, PinMode.Output); // MOSI.
             Configuration.SetPinFunction(13, DeviceFunction.SPI1_MOSI);
-            s_gpioController.OpenPin(14, PinMode.Output); // CLK.
+            Configuration.SetPinFunction(404, DeviceFunction.SPI1_MISO);
+            //s_gpioController.OpenPin(14, PinMode.Output); // CLK.
             Configuration.SetPinFunction(14, DeviceFunction.SPI1_CLOCK);
             s_gpioController.OpenPin(19, PinMode.Input);  // Int1.
             s_gpioController.OpenPin(23, PinMode.Input);  // Int2.
@@ -168,14 +169,17 @@ namespace ProjectESP32 {
             s_keyMatrix.StopListeningKeyEvent();
 
             // Set Display.
-            s_gpioController.Write(27, PinValue.High); // ACs.
-            s_gpioController.Write(12, PinValue.High); // A0.
+            //s_gpioController.Write(27, PinValue.High); // ACs.
+            Debug.WriteLine($"{Configuration.GetFunctionPin(DeviceFunction.SPI1_CLOCK)}");
+            Debug.WriteLine($"{Configuration.GetFunctionPin(DeviceFunction.SPI1_MISO)}");
+            Debug.WriteLine($"{Configuration.GetFunctionPin(DeviceFunction.SPI1_MOSI)}");
+            //s_gpioController.Write(12, PinValue.High); // A0.
             s_gpioController.Write(26, PinValue.High); // ARes.
             Thread.Sleep(10);
             s_gpioController.Write(26, PinValue.Low); // ARes.
 
             // Create spi and i2c devices.
-            //s_display = new SpiDevice(new SpiConnectionSettings(1));
+            s_display = new SpiDevice(new SpiConnectionSettings(1, 27));
             s_tmp112 = new I2cDevice(new I2cConnectionSettings(1, 0x49));
             s_lsm6 = new I2cDevice(new I2cConnectionSettings(1, 0x75));
 

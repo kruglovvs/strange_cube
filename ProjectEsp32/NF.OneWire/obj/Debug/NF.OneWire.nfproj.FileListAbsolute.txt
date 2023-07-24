@@ -1,0 +1,17 @@
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\NF.OneWire.dll
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\NF.OneWire.pdb
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\NF.OneWire.pe
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\NF.OneWire.pdbx
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\mscorlib.pe
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\mscorlib.pdbx
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\mscorlib.dll
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\bin\Debug\mscorlib.xml
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\NF.OneWire.nfproj.AssemblyReference.cache
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\NF.OneWire.nfproj.CoreCompileInputs.cache
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\NF.OneWire.pe
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\NF.OneWire.pdbx
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\NF.OneWire.nfproj.CopyComplete
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\NF.OneWire.dll
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\NF.OneWire.pdb
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\mscorlib.dll
+C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\NF.OneWire\obj\Debug\mscorlib.xml
