@@ -1,0 +1,78 @@
+using nanoFramework.Hardware.Esp32;
+using nanoFramework.M2Mqtt;
+using nanoFramework.M2Mqtt.Messages;
+using nanoFramework.Networking;
+using System.Diagnostics;
+using System.IO;
+using System.Text;
+using System.Threading;
+using Network;
+using Network.Clients;
+
+namespace Network
+{
+    public static class NetworkController
+    {
+        private static Connections.Wifi s_wifi { get; set; } = new Connections.Wifi(Constants.Wifi.SSID, Constants.Wifi.Password);
+        private static Clients.Mqtt s_mqtt { get; set; } = new Clients.Mqtt(Constants.Mqtt.Ip, Constants.Mqtt.Port, Constants.Mqtt.UsingSecure,
+            Constants.Mqtt.CaCert, Constants.Mqtt.ClientCert, Constants.Mqtt.MqttSslProtocol, 
+            Constants.Mqtt.ClientID, Constants.Mqtt.Username, Constants.Mqtt.Password);
+        public static void TurnOn()
+        {
+            s_wifi.Connect();
+            s_mqtt.Connect();
+            s_mqtt.Subscribe("/Instructions");
+            s_mqtt.Subscribe("/BootData");
+            s_mqtt.Got += (sender, e) => {GotMessage?.Invoke(sender, e); };
+            s_mqtt.Got += (sender, e) =>
+            {
+                Debug.WriteLine($"Got data: {e.Topic} : {Encoding.UTF8.GetString(e.Message, 0, e.Message.Length)}");
+                switch (e.Topic)
+                {
+                    case "/BootData":
+                        MemoryStream stream = new MemoryStream(e.Message);
+                        //stream.Flush();
+                        stream.Close();
+                        break;
+                    case "/Instructions":
+                        break;
+                }
+            };
+        }
+
+        public static void Subscribe(string topic)
+        {
+            s_mqtt.Subscribe(topic);
+        }
+        public static void Unsubscribe(string topic)
+        {
+            s_mqtt.Unsubscribe(topic);
+        }
+        public static void Publish(string topic, string message)
+        {
+            Debug.WriteLine("Mqtt publish");
+            try
+            {
+                s_mqtt.Publish(topic, message);
+            }
+            catch
+            {
+                Debug.WriteLine("Can't publish message");
+            }
+        }
+        public static void Publish(string topic, byte[] message)
+        {
+            Debug.WriteLine("Mqtt publish");
+            try
+            {
+                s_mqtt.Publish(topic, message);
+            }
+            catch
+            {
+                Debug.WriteLine("Can't publish message");
+            }
+        }
+
+        public static event IClient.GotMessageEventHandler GotMessage;
+    }
+}

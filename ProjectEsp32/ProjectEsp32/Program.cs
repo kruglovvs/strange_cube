@@ -1,18 +1,10 @@
-using System;
+using Network;
+using System.Collections;
 using System.Diagnostics;
 using System.Threading;
-using System.Device.Gpio;
-using Iot.Device.Button;
-using nanoFramework.Hardware.Esp32;
-using Iot.Device.KeyMatrix;
-using nanoFramework.Networking;
-using nanoFramework.M2Mqtt;
-using nanoFramework.M2Mqtt.Messages;
-using System.IO;
-using System.Collections;
-using static nanoFramework.Hardware.Esp32.NativeMemory;
-using static ProjectESP32.Program;
+using System;
 using System.Text;
+using Periphery;
 
 namespace ProjectESP32
 {
@@ -21,73 +13,68 @@ namespace ProjectESP32
         private static Queue _instructions { get; set; } = new Queue();
         private static void Win()
         {
-            //Periphery.SetDisplay(new byte[128 * 64]);
-            //Periphery.SetLuminodiodds(new byte[9 * 3]);
+            PeripheryController.SetDisplay(new byte[128 * 64]);
+            PeripheryController.SetLuminodiodds(new byte[9 * 3]);
             Debug.WriteLine("Win!");
-            Periphery.OpenDoor();
-            Periphery.Vibrate(1500);
-            Network.Publish("/GameData", "Win!");
+            PeripheryController.OpenDoor();
+            PeripheryController.Vibrate(1500);
+            NetworkController.Publish("/GameData", "Win");
+        }
+        private static void Lose()
+        {
+            //PeripheryController.SetDisplay(new byte[128 * 64]);
+            //PeripheryController.SetLuminodiodds(new byte[9 * 3]);
+            _instructions.Clear();
+            Debug.WriteLine("Lose!");
+            PeripheryController.OpenDoor();
+            PeripheryController.Vibrate(1500);
+            NetworkController.Publish("/GameData", "Lose");
         }
         private static void WriteInstructions(byte[] instructionBytes)
         {
+
+            WaitingAction?.Dispose();
+            Debug.WriteLine("WriteInstructions!");
             _instructions.Clear();
-            for (int i = 0; i < instructionBytes.Length; ++i) 
+            for (int i = 0; i < instructionBytes.Length; ++i)
             {
                 Debug.WriteLine($"Got Instruction: {instructionBytes[i]}");
                 _instructions.Enqueue(instructionBytes[i]);
             }
             Debug.WriteLine($"action next: {(Instruction)_instructions.Peek()}");
+
             CheckNextAction();
         }
         private static void CheckAction(Instruction instruction)
         {
             Debug.WriteLine($"Got action: {instruction}");
-            if (_instructions == null)
+            if ((_instructions == null) || (_instructions.Count == 0))
             {
                 return;
             }
-            if ((_instructions.Count != 0) && (instruction == (Instruction)_instructions.Peek()))
+            if ((_instructions.Count != 0) && ((instruction == (Instruction)_instructions.Peek())))
             {
                 _instructions.Dequeue();
+                WaitingAction?.Dispose();
+                if (_instructions.Count == 0)
+                {
+                    Win();
+                }
+                CheckNextAction();
             }
-            CheckNextAction();
         }
         private static void CheckNextAction()
         {
-            Periphery.ListeningButtons = false;
-            Periphery.CheckingRotation = false;
-            Periphery.CheckingTemperature = false;
-            Periphery.CheckingAccelation = false;
-
-            if (_instructions.Count == 0) {
-                Win();
+            Debug.WriteLine("CheckNextAction!");
+            if ((_instructions.Count == 0))
+            {
+                PeripheryController.ListeningAction = Instruction.Empty;
                 return;
             }
-            switch ((Instruction)_instructions?.Peek())
-            {
-                case Instruction.Rotate:
-                    Periphery.CheckingRotation = true;
-                    break;
-                case Instruction.Accelate:
-                    Periphery.CheckingRotation = true;
-                    break;
-                case Instruction.HeatUp:
-                case Instruction.CoolDown:
-                    Periphery.CheckingRotation = true;
-                    break;
-                case Instruction.ButtonPress0:
-                case Instruction.ButtonPress1:
-                case Instruction.ButtonPress2:
-                case Instruction.ButtonPress3:
-                case Instruction.ButtonPress4:
-                case Instruction.ButtonPress5:
-                case Instruction.ButtonPress6:
-                case Instruction.ButtonPress7:
-                case Instruction.ButtonPress8:
-                    Periphery.ListeningButtons = true;
-                    break;
-            }
+            PeripheryController.ListeningAction = (Instruction)_instructions.Peek();
+            WaitingAction = new Timer(new TimerCallback((e) => { Lose(); }), null, 10000, Timeout.Infinite);
         }
+        private static Timer WaitingAction { get; set; }
 
         public enum Instruction : byte
         {
@@ -112,20 +99,22 @@ namespace ProjectESP32
         }
         public static void Main()
         {
+            NetworkController.TurnOn();
             Debug.WriteLine("Start main");
-            Periphery.TurnOn();
-            Debug.WriteLine("Periphery turned on");
-            Network.TurnOn();
-            Debug.WriteLine("Network turned on");
+            PeripheryController.TurnOn();
+            Debug.WriteLine("PeripheryController turned on");
 
-            Network.GotInstructions = WriteInstructions;
-            Periphery.Action = CheckAction;
+            NetworkController.GotMessage += (sender, e) => { Debug.WriteLine("Got message"); if (e.Topic == "/Instructions") WriteInstructions(e.Message); };
+            PeripheryController.GotAction += (e) => { CheckAction(e); };
 
-            Network.Publish("/Instructions", new byte[] { (byte)Instruction.ButtonPress0 });
-            Network.Publish("/GameData", $"check working");
-            Network.Publish("/BootData", $"Die");
+            _instructions.Enqueue(Instruction.Vibrate);
+            CheckNextAction();
 
-            Debug.WriteLine("END");
+            NetworkController.Publish("/Instructions", new byte[] { (byte)Instruction.ButtonPress0 });
+            NetworkController.Publish("/GameData", $"check working");
+            NetworkController.Publish("/BootData", $"Die");
+
+            Thread.Sleep(Timeout.Infinite);
         }
     }
 }
