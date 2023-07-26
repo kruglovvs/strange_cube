@@ -1,30 +1,13 @@
 ﻿// Copyright kruglov.valentine@gmail.com KruglovVS.
 
 using System.Device.Gpio;
+using System.Device.Spi;
 using System.Threading;
 
 namespace Periphery.Displays
 {
-    public class St7565WO12864 : SpiDisplay, IDisplay, ITurningOn
+    public class St7565WO12864 : SpiDevice, IDisplay
     {
-        public bool IsTurnedOn
-        {
-            get { return IsTurnedOn; }
-            set
-            {
-                PinACs.Write(value);
-                if (!value)
-                {
-                    PinA0.Write((byte)StateA0.Data);
-                    PinARes.Write(PinValue.Low);
-                } else
-                {
-                    PinARes.Write(PinValue.High);
-                    Thread.Sleep(Constants.Time.SetARes);
-                }
-                IsTurnedOn = value;
-            }
-        }
         private enum StateA0 : byte
         {
             Data = 1,
@@ -32,17 +15,13 @@ namespace Periphery.Displays
         }
         private GpioPin PinA0 { get; init; }
         private GpioPin PinARes { get; init; }
-        private GpioPin PinACs { get; init; }
-        internal St7565WO12864(int pinNumberA0, int pinNumberARes, int pinNumberACs, GpioController gpioController)
+        internal St7565WO12864(int pinNumberA0, int pinNumberARes, int pinNumberACs, GpioController gpioController) : base(new SpiConnectionSettings(Constants.ID.SpiBus, pinNumberACs))
         {
+            ConnectionSettings.ChipSelectLineActiveState = PinValue.Low;
             PinA0 = gpioController.OpenPin(pinNumberA0, Constants.PinModes.A0);
             PinARes = gpioController.OpenPin(pinNumberARes, Constants.PinModes.ARes);
-            PinACs = gpioController.OpenPin(pinNumberACs, Constants.PinModes.ACs);
-            IsTurnedOn = (bool)Constants.PinStartValues.ACs;
-        }
-        public class Image
-        {
-
+            PinA0.Write(Constants.PinStartValues.A0);
+            PinARes.Write(Constants.PinStartValues.ARes);
         }
         public void SetImage(byte[] image)
         {

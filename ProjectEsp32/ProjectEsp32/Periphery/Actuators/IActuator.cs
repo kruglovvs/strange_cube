@@ -4,6 +4,6 @@ namespace Periphery.Actuators
 {
     public interface IActuator
     {
-        public bool IsActing { get; set; }
+        public void Actuate();
     }
 }

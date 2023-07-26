@@ -6,8 +6,31 @@ using System;
 using System.Text;
 using Periphery;
 
-namespace ProjectESP32
+namespace Game
 {
+    public enum Instruction : byte
+    {
+        Rotate = 0x00,
+        Accelate = 0x01,
+        HeatUp = 0x02,
+        CoolDown = 0x03,
+        Illuminate = 0x04,
+        //Darken = 0x05,
+        Vibrate = 0x06,
+        Smoke = 0x07,
+        ButtonPress0 = 0x08,
+        ButtonPress1 = 0x09,
+        ButtonPress2 = 0x0A,
+        ButtonPress3 = 0x0B,
+        ButtonPress4 = 0x0C,
+        ButtonPress5 = 0x0D,
+        ButtonPress6 = 0x0E,
+        ButtonPress7 = 0x0F,
+        ButtonPress8 = 0x10,
+        ButtonDisplayPress0 = 0x11,
+        ButtonDisplayPress1 = 0x12,
+        Empty = 0xff,
+    }
     public class Program
     {
         private static Queue _instructions { get; set; } = new Queue();
@@ -75,32 +98,10 @@ namespace ProjectESP32
             WaitingAction = new Timer(new TimerCallback((e) => { Lose(); }), null, 10000, Timeout.Infinite);
         }
         private static Timer WaitingAction { get; set; }
-
-        public enum Instruction : byte
-        {
-            Rotate = 0x00,
-            Accelate = 0x01,
-            HeatUp = 0x02,
-            CoolDown = 0x03,
-            Illuminate = 0x04,
-            //Darken = 0x05,
-            Vibrate = 0x06,
-            Smoke = 0x07,
-            ButtonPress0 = 0x08,
-            ButtonPress1 = 0x09,
-            ButtonPress2 = 0x0A,
-            ButtonPress3 = 0x0B,
-            ButtonPress4 = 0x0C,
-            ButtonPress5 = 0x0D,
-            ButtonPress6 = 0x0E,
-            ButtonPress7 = 0x0F,
-            ButtonPress8 = 0x10,
-            Empty = 0xff,
-        }
         public static void Main()
         {
-            NetworkController.TurnOn();
             Debug.WriteLine("Start main");
+            NetworkController.TurnOn();
             PeripheryController.TurnOn();
             Debug.WriteLine("PeripheryController turned on");
 

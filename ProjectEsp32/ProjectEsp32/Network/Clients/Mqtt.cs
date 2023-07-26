@@ -40,7 +40,6 @@ namespace Network.Clients
         {
             Subscribe(new string[] { topic }, new MqttQoSLevel[] { MqttQoSLevel.ExactlyOnce });
         }
-        
         public void Unsubscribe(string topic)
         {
             Unsubscribe(new string[] { topic });

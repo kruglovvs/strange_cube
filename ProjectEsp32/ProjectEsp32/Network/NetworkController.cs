@@ -19,10 +19,14 @@ namespace Network
             Constants.Mqtt.ClientID, Constants.Mqtt.Username, Constants.Mqtt.Password);
         public static void TurnOn()
         {
+            Debug.WriteLine("connecting wifi");
             s_wifi.Connect();
-            s_mqtt.Connect();
+            Debug.WriteLine("connecting mqtt");
+            //s_mqtt.Connect();
+            Debug.WriteLine("subscribing");
             s_mqtt.Subscribe("/Instructions");
             s_mqtt.Subscribe("/BootData");
+            Debug.WriteLine("making events");
             s_mqtt.Got += (sender, e) => {GotMessage?.Invoke(sender, e); };
             s_mqtt.Got += (sender, e) =>
             {
@@ -38,6 +42,7 @@ namespace Network
                         break;
                 }
             };
+            Debug.WriteLine("network turned on");
         }
 
         public static void Subscribe(string topic)

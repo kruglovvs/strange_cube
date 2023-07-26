@@ -6,8 +6,9 @@ namespace Periphery.Constants
 {
     public static class Time
     {
-        public const int Debounce = 10;
-        public const int SetARes = 10;
+        public static readonly TimeSpan Debounce = new TimeSpan(10);
+        public static readonly TimeSpan SetARes = new TimeSpan(10);
+        public static readonly TimeSpan Actuate = new TimeSpan(3000);
     }
 }
 

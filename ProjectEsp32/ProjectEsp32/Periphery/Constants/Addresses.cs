@@ -8,4 +8,3 @@ namespace Periphery.Constants
         public const byte LSM6 = 0b1001001;
     }
 }
-

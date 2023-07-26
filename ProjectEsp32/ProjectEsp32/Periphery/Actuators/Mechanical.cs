@@ -1,6 +1,7 @@
 ﻿// Copyright kruglov.valentine@gmail.com KruglovVS.
 
 using System.Device.Gpio;
+using System.Threading;
 
 namespace Periphery.Actuators
 {
@@ -10,19 +11,12 @@ namespace Periphery.Actuators
         internal Mechanical(int pinNumber, GpioController gpioController)
         {
             Pin = gpioController.OpenPin(pinNumber, Constants.PinModes.Mechanical);
-            IsActing = (bool)Constants.PinStartValues.Mechanical;
+            Pin.Write(Constants.PinStartValues.Mechanical);
         }
-        public bool IsActing
+        public void Actuate()
         {
-            get
-            {
-                return IsActing;
-            }
-            set
-            {
-                Pin.Write((PinValue)value);
-                IsActing = value;
-            }
+            Pin.Write(PinValue.High);
+            new Timer((e) => { Pin.Write(PinValue.Low); }, null, Constants.Time.Actuate.Milliseconds, Timeout.Infinite);
         }
     }
 
