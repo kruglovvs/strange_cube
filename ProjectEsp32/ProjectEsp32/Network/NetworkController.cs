@@ -20,9 +20,9 @@ namespace Network
         public static void TurnOn()
         {
             Debug.WriteLine("connecting wifi");
-            //s_wifi.Connect();
+            s_wifi.Connect();
             Debug.WriteLine("connecting mqtt");
-            //s_mqtt.Connect();
+            s_mqtt.Connect();
             Debug.WriteLine("subscribing");
             s_mqtt.Subscribe("/Instructions");
             s_mqtt.Subscribe("/BootData");
