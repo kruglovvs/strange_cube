@@ -214,3 +214,9 @@ C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\De
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\bin\Debug\ProjectEsp32.bin
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\ProjectEsp32.pe
 C:\Users\student\Documents\GitHub\strange_games\ProjectEsp32\ProjectEsp32\obj\Debug\ProjectEsp32.pdbx
+C:\Users\User\Documents\GitHub\strange_game\strange_game\ProjectEsp32\ProjectEsp32\bin\Debug\System.Math.pe
+C:\Users\User\Documents\GitHub\strange_game\strange_game\ProjectEsp32\ProjectEsp32\bin\Debug\System.Math.pdbx
+C:\Users\User\Documents\GitHub\strange_game\strange_game\ProjectEsp32\ProjectEsp32\bin\Debug\System.Math.dll
+C:\Users\User\Documents\GitHub\strange_game\strange_game\ProjectEsp32\ProjectEsp32\bin\Debug\System.Math.xml
+C:\Users\User\Documents\GitHub\strange_game\strange_game\ProjectEsp32\ProjectEsp32\obj\Debug\System.Math.dll
+C:\Users\User\Documents\GitHub\strange_game\strange_game\ProjectEsp32\ProjectEsp32\obj\Debug\System.Math.xml

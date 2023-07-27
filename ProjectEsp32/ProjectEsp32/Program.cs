@@ -5,11 +5,11 @@ using System.Threading;
 using System;
 using System.Text;
 using Periphery;
+using System.IO;
+using nanoFramework.Hardware.Esp32;
 
-namespace Game
-{
-    public enum Instruction : byte
-    {
+namespace Game {
+    public enum Instruction : byte {
         Rotate = 0x00,
         Accelate = 0x01,
         HeatUp = 0x02,
@@ -29,91 +29,114 @@ namespace Game
         ButtonPress8 = 0x10,
         ButtonDisplayPress0 = 0x11,
         ButtonDisplayPress1 = 0x12,
+        SetVibrationMotor = 0x13,
+        OpenDoor = 0x14,
         Empty = 0xff,
     }
-    public class Program
-    {
+    public class Program {
         private static Queue _instructions { get; set; } = new Queue();
-        private static void Win()
-        {
+        private static Timer WaitingAction { get; set; }
+        private static void Win() {
             PeripheryController.SetDisplay(new byte[128 * 64]);
             PeripheryController.SetLuminodiodds(new byte[9 * 3]);
             Debug.WriteLine("Win!");
+            _instructions.Clear();
+            CheckNextAction();
             PeripheryController.OpenDoor();
-            PeripheryController.Vibrate(1500);
+            PeripheryController.Vibrate();
             NetworkController.Publish("/GameData", "Win");
         }
-        private static void Lose()
-        {
-            //PeripheryController.SetDisplay(new byte[128 * 64]);
-            //PeripheryController.SetLuminodiodds(new byte[9 * 3]);
+        private static void Lose() {
+            PeripheryController.SetDisplay(new byte[128 * 64]);
+            PeripheryController.SetLuminodiodds(new byte[9 * 3]);
             _instructions.Clear();
+            CheckNextAction();
             Debug.WriteLine("Lose!");
-            PeripheryController.OpenDoor();
-            PeripheryController.Vibrate(1500);
             NetworkController.Publish("/GameData", "Lose");
         }
-        private static void WriteInstructions(byte[] instructionBytes)
-        {
-
-            WaitingAction?.Dispose();
-            Debug.WriteLine("WriteInstructions!");
-            _instructions.Clear();
-            for (int i = 0; i < instructionBytes.Length; ++i)
-            {
-                Debug.WriteLine($"Got Instruction: {instructionBytes[i]}");
-                _instructions.Enqueue(instructionBytes[i]);
+        private static void CheckMessage(string topic, byte[] message) {
+            Debug.WriteLine($"Check message: {topic}, {message}");
+            switch (topic) {
+            case "/Instructions":
+                WaitingAction?.Dispose();
+                Debug.WriteLine("WriteInstructions!");
+                _instructions.Clear();
+                for (int i = 0; i < message.Length; ++i) {
+                    Debug.WriteLine($"Got Instruction: {message[i]}");
+                    _instructions.Enqueue(message[i]);
+                }
+                Debug.WriteLine($"action next: {(Instruction)_instructions.Peek()}");
+                CheckNextAction();
+                break;
+            case "/BootData":
+                MemoryStream stream = new MemoryStream(message);
+                //stream.Flush();
+                stream.Close();
+                break;
             }
-            Debug.WriteLine($"action next: {(Instruction)_instructions.Peek()}");
-
-            CheckNextAction();
         }
-        private static void CheckAction(Instruction instruction)
-        {
-            Debug.WriteLine($"Got action: {instruction}");
-            if ((_instructions == null) || (_instructions.Count == 0))
-            {
+        private static void CheckAction(Instruction instruction) {
+            Debug.WriteLine($"Check action: {instruction}");
+            if ((_instructions == null) || (_instructions.Count == 0)) {
                 return;
             }
-            if ((_instructions.Count != 0) && ((instruction == (Instruction)_instructions.Peek())))
-            {
-                _instructions.Dequeue();
-                WaitingAction?.Dispose();
-                if (_instructions.Count == 0)
-                {
-                    Win();
+            switch (instruction) {
+            case Instruction.ButtonDisplayPress0:
+                Sleep.StartLightSleep();
+                break;
+            case Instruction.ButtonDisplayPress1:
+                Lose();
+                break;
+            default:
+                if (instruction == (Instruction)_instructions.Peek()) {
+                    _instructions.Dequeue();
+                    WaitingAction?.Dispose();
+                    if (_instructions.Count == 0) {
+                        Win();
+                    }
+                    CheckNextAction();
                 }
-                CheckNextAction();
+                break;
             }
         }
-        private static void CheckNextAction()
-        {
+        private static void CheckNextAction() {
             Debug.WriteLine("CheckNextAction!");
-            if ((_instructions.Count == 0))
-            {
+            Debug.WriteLine($"Next actions: {(Instruction)_instructions.Peek()}");
+            if ((_instructions == null) || (_instructions.Count == 0)) {
                 PeripheryController.ListeningAction = Instruction.Empty;
                 return;
             }
-            PeripheryController.ListeningAction = (Instruction)_instructions.Peek();
-            WaitingAction = new Timer(new TimerCallback((e) => { Lose(); }), null, 10000, Timeout.Infinite);
+            switch ((Instruction)_instructions.Peek()) {
+            case Instruction.OpenDoor:
+                PeripheryController.OpenDoor();
+                _instructions.Dequeue();
+                CheckNextAction();
+                break;
+            case Instruction.SetVibrationMotor:
+                PeripheryController.Vibrate();
+                _instructions.Dequeue();
+                CheckNextAction();
+                break;
+            default:
+                PeripheryController.ListeningAction = (Instruction)_instructions.Peek();
+                WaitingAction = new Timer(new TimerCallback((e) => { Lose(); }), null, 10000, Timeout.Infinite);
+                break;
+            }
         }
-        private static Timer WaitingAction { get; set; }
-        public static void Main()
-        {
+
+        public static void Main() {
             Debug.WriteLine("Start main");
             NetworkController.TurnOn();
+            Debug.WriteLine("Network turned on");
             PeripheryController.TurnOn();
             Debug.WriteLine("PeripheryController turned on");
 
-            NetworkController.GotMessage += (sender, e) => { Debug.WriteLine("Got message"); if (e.Topic == "/Instructions") WriteInstructions(e.Message); };
+            NetworkController.GotMessage += (sender, e) => { CheckMessage(e.Topic, e.Message); };
             PeripheryController.GotAction += (e) => { CheckAction(e); };
+            Debug.WriteLine("made events");
 
-            _instructions.Enqueue(Instruction.Vibrate);
-            CheckNextAction();
-
-            NetworkController.Publish("/Instructions", new byte[] { (byte)Instruction.ButtonPress0 });
-            NetworkController.Publish("/GameData", $"check working");
-            NetworkController.Publish("/BootData", $"Die");
+            //_instructions.Enqueue(Instruction.Accelate);
+            //CheckNextAction();
 
             Thread.Sleep(Timeout.Infinite);
         }

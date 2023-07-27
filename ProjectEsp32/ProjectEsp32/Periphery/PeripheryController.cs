@@ -18,10 +18,6 @@ namespace Periphery
     public static class PeripheryController
     {
         internal static GpioController s_gpioController { get; set; } = new GpioController();
-        private static St7565WO12864 s_display { get; set; }
-        private static Luminodiodes s_luminodiodes { get; set; }
-        private static Mechanical s_vibrationMotor { get; set; }
-        private static Mechanical s_door{ get; set; }
 
         public static Instruction ListeningAction
         {
@@ -69,23 +65,14 @@ namespace Periphery
                 }
             }
         }
-
         public static void TurnOn()
         {
+            Sleep.EnableWakeupByPin(Sleep.WakeupGpioPin.Pin34, 2);
+            Sleep.EnableWakeupByPin(Sleep.WakeupGpioPin.Pin35, 2);
+
             Debug.WriteLine("I2cController turning on");
             I2cSensorsController.TurnOn();
-            I2cSensorsController.RotationListened += (sender, e) => { };//GotAction?.Invoke(Instruction.Rotate); };
-            I2cSensorsController.AccelationListened += (sender, e) => { };//GotAction?.Invoke(Instruction.Rotate); };
-            I2cSensorsController.TemperatureListened += (sender, e) => {
-                if (e.Data[0] > Constants.Temperature.Hot)
-                {
-                    GotAction?.Invoke(Instruction.HeatUp);
-                }
-                else if (e.Data[0] < Constants.Temperature.Cold)
-                {
-                    GotAction?.Invoke(Instruction.CoolDown);
-                }
-            };
+            I2cSensorsController.GotAction += (e) => { GotAction?.Invoke(e); };
 
             Debug.WriteLine("ButtonsController turning on");
             ButtonsController.TurnOn();
@@ -96,43 +83,22 @@ namespace Periphery
             SimpleSensorsController.GotSimpleSensor += (e) => { GotAction?.Invoke(e); };
 
             DisplaysController.TurnOn();
-            // These pins should be removed to other places.
-            //s_gpioController.OpenPin(34, PinMode.Output); // Door.
-            //IsDoorOpened = false;
-            //s_gpioController.OpenPin(35, PinMode.Output); // VibrationMotor.
-            //s_gpioController.Wite(35, PinValue.Low);
-
-            // Set Display.
-            //s_gpioController.Write(27, PinValue.High); // ACs.
-            Debug.WriteLine($"{Configuration.GetFunctionPin(DeviceFunction.SPI1_CLOCK)}");
-            Debug.WriteLine($"{Configuration.GetFunctionPin(DeviceFunction.SPI1_MISO)}");
-            Debug.WriteLine($"{Configuration.GetFunctionPin(DeviceFunction.SPI1_MOSI)}");
-            //s_gpioController.Write(12, PinValue.High); // A0.
-            s_gpioController.Write(26, PinValue.High); // ARes.
-            Thread.Sleep(10);
-            s_gpioController.Write(26, PinValue.Low); // ARes.
-
-            // Create spi and i2c devices.
-            Debug.WriteLine($"Create spi and i2c devices.");
-            //s_display = new SpiDevice(new SpiConnectionSettings(1, 27));
-
+            ActuatorsController.TurnOn();
         }
         public static void SetLuminodiodds(byte[] image)
         {
-            //LuminodiodesInterop.LuminodiodesInterop.OneWireSendLuminodiodes(image, 27);
+            DisplaysController.SetLuminodiodes(image);
         }
         public static void SetDisplay(byte[] image)
         {
-            //s_display.Write(new SpanByte(image));
+            DisplaysController.SetDisplay(image);
         }
-        public static void Vibrate(int timeMillisecons)
+        public static void Vibrate()
         {
-            // s_gpioController.Write(35, PinValue.High); // VibrationMotor.
-            //Thread.Sleep(timeMillisecons);
-            // s_gpioController.Write(35, PinValue.Low); // VibrationMotor.
+            ActuatorsController.Vibrate();
         }
         public static void OpenDoor() {
-
+            ActuatorsController.OpenDoor();
         }
 
         public static event PeripheryGotActionEventHandler GotAction;

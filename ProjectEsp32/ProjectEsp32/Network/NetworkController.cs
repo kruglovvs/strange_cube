@@ -20,7 +20,7 @@ namespace Network
         public static void TurnOn()
         {
             Debug.WriteLine("connecting wifi");
-            s_wifi.Connect();
+            //s_wifi.Connect();
             Debug.WriteLine("connecting mqtt");
             //s_mqtt.Connect();
             Debug.WriteLine("subscribing");
@@ -28,20 +28,6 @@ namespace Network
             s_mqtt.Subscribe("/BootData");
             Debug.WriteLine("making events");
             s_mqtt.Got += (sender, e) => {GotMessage?.Invoke(sender, e); };
-            s_mqtt.Got += (sender, e) =>
-            {
-                Debug.WriteLine($"Got data: {e.Topic} : {Encoding.UTF8.GetString(e.Message, 0, e.Message.Length)}");
-                switch (e.Topic)
-                {
-                    case "/BootData":
-                        MemoryStream stream = new MemoryStream(e.Message);
-                        //stream.Flush();
-                        stream.Close();
-                        break;
-                    case "/Instructions":
-                        break;
-                }
-            };
             Debug.WriteLine("network turned on");
         }
 

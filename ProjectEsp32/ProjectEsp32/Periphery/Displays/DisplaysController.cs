@@ -2,6 +2,7 @@
 
 using nanoFramework.Hardware.Esp32;
 using System.Device.Gpio;
+using System.Threading;
 using static Periphery.PeripheryController;
 
 namespace Periphery.Displays
@@ -18,7 +19,12 @@ namespace Periphery.Displays
 
             s_display = new St7565WO12864(Constants.Pins.A0, Constants.Pins.ARes, Constants.Pins.ACs, s_gpioController);
             s_luminodiodes = new Luminodiodes(Constants.Pins.Luminoides, Constants.Counts.Luminodiodes, s_gpioController);
-
+        }
+        public static void SetLuminodiodes(byte[] image) {
+            s_luminodiodes.SetImage(image);
+        }
+        public static void SetDisplay(byte[] image) {
+            s_display.SetImage(image);
         }
     }
 }
