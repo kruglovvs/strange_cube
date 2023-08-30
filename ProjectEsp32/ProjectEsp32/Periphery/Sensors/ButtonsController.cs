@@ -22,6 +22,7 @@ namespace Periphery.Sensors
             {
                 if (e.EventType == PinEventTypes.Rising)
                 {
+                    Debug.WriteLine($"Action button: {(Instruction)((int)Instruction.ButtonPress0 + e.Input * 3 + e.Output)}");
                     GotButton?.Invoke((Instruction)((int)Instruction.ButtonPress0 + e.Input * 3 + e.Output));
                 }
             };
@@ -31,21 +32,40 @@ namespace Periphery.Sensors
             for (int i = 0; i < Constants.Counts.Buttons; ++i) 
             {
                 s_buttons[i] = new GpioButton(Constants.Pins.Buttons[i], s_gpioController, false, Constants.PinModes.Button, Constants.Time.Debounce);
-                s_buttons[i].Press += (sender, e) => { GotButton?.Invoke((Instruction)((int)Instruction.ButtonDisplayPress0+ i)); };
+                s_buttons[i].Press += (sender, e) => {
+                    Debug.WriteLine($"Action button: {(Instruction)((int)Instruction.ButtonDisplayPress0 + i)}");
+                    GotButton?.Invoke((Instruction)((int)Instruction.ButtonDisplayPress0 + i)); };
             }
         }
+        private static bool s_isListeningMatrix = false;
         public static bool IsListeningMatrix
         {
+            get
+            {
+                return s_isListeningMatrix;
+            }
             set
             {
+                Debug.WriteLine("Setting listening matrix");
                 if (value)
                 {
-                    s_keyMatrix?.StartListeningKeyEvent();
+                    if (!IsListeningMatrix)
+                    {
+                        Debug.WriteLine("Setting listening matrix true");
+                        s_keyMatrix?.StartListeningKeyEvent();
+                        Debug.WriteLine("set listening matrix true");
+                    }
                 }
                 else
                 {
-                    s_keyMatrix?.StopListeningKeyEvent();
+                    if (IsListeningMatrix)
+                    {
+                        Debug.WriteLine("Setting listening matrix false");
+                        s_keyMatrix?.StopListeningKeyEvent();
+                        Debug.WriteLine("Set listening matrix false");
+                    }
                 }
+                s_isListeningMatrix = value;
             }
         }
 

@@ -15,7 +15,7 @@ namespace Network
     {
         private static Connections.Wifi s_wifi { get; set; } = new Connections.Wifi(Constants.Wifi.SSID, Constants.Wifi.Password);
         private static Clients.Mqtt s_mqtt { get; set; } = new Clients.Mqtt(Constants.Mqtt.Ip, Constants.Mqtt.Port, Constants.Mqtt.UsingSecure,
-            Constants.Mqtt.CaCert, Constants.Mqtt.ClientCert, Constants.Mqtt.MqttSslProtocol, 
+            Constants.Mqtt.CaCert, Constants.Mqtt.ClientCert, Constants.Mqtt.MqttSslProtocol,
             Constants.Mqtt.ClientID, Constants.Mqtt.Username, Constants.Mqtt.Password);
         public static void TurnOn()
         {
@@ -27,8 +27,24 @@ namespace Network
             s_mqtt.Subscribe("/Instructions");
             s_mqtt.Subscribe("/BootData");
             Debug.WriteLine("making events");
-            s_mqtt.Got += (sender, e) => {GotMessage?.Invoke(sender, e); };
+            s_mqtt.Got += (sender, e) => { GotMessage?.Invoke(sender, e); };
             Debug.WriteLine("network turned on");
+            s_mqtt.ConnectionClosed += (sender, e) =>
+            {
+                while (!s_mqtt.IsConnected)
+                {
+                    try
+                    {
+                        s_mqtt.Reconnect();
+                        Debug.WriteLine("Reconnecting");
+                    }
+                    catch
+                    {
+                        Debug.WriteLine("Can't reconnect");
+                    }
+                }
+                Debug.WriteLine("Reconnected MQTT");
+            };
         }
 
         public static void Subscribe(string topic)
@@ -41,9 +57,9 @@ namespace Network
         }
         public static void Publish(string topic, string message)
         {
-            Debug.WriteLine("Mqtt publish");
             try
             {
+                Debug.WriteLine($"Mqtt publish string: {topic} - {message}");
                 s_mqtt.Publish(topic, message);
             }
             catch
@@ -53,9 +69,9 @@ namespace Network
         }
         public static void Publish(string topic, byte[] message)
         {
-            Debug.WriteLine("Mqtt publish");
             try
             {
+                Debug.WriteLine("Mqtt publish byte");
                 s_mqtt.Publish(topic, message);
             }
             catch

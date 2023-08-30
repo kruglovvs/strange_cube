@@ -34,6 +34,7 @@ namespace Periphery.Sensors
                 {
                     s_checkingTemperature = new Timer((state) =>
                     {
+                        Debug.WriteLine("Checking Temperature");
                         if (s_tmp112.Temperature.Data[0] > Constants.Temperature.Hot) {
                             GotAction?.Invoke(Instruction.HeatUp);
                         } else if (s_tmp112.Temperature.Data[0] < Constants.Temperature.Cold) {
@@ -54,6 +55,7 @@ namespace Periphery.Sensors
                 {
                     s_checkingRotation = new Timer((state) =>
                     {
+                        Debug.WriteLine("Checking Rotation");
                         double[] firstData = s_lsm6.Rotation.Data;
                         Thread.Sleep(100);
                         double[] secondData = s_lsm6.Rotation.Data;
@@ -79,6 +81,7 @@ namespace Periphery.Sensors
                 {
                     s_checkingAccelation = new Timer((state) =>
                     {
+                        Debug.WriteLine("Checking Accelation");
                         double[] data = s_lsm6.Accelation.Data;
                         for (int i = 0; i < 3; ++i) {
                             if (Math.Abs(data[i]) > 20) {

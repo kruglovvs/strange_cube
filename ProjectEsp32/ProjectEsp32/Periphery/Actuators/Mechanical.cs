@@ -15,8 +15,8 @@ namespace Periphery.Actuators
         }
         public void Actuate()
         {
-            Pin.Write(PinValue.High);
-            new Timer((e) => { Pin.Write(PinValue.Low); }, null, Constants.Time.Actuate.Milliseconds, Timeout.Infinite);
+            //Pin.Write(PinValue.High);
+            //new Timer((e) => { Pin.Write(PinValue.Low); }, null, Constants.Time.Actuate.Milliseconds, Timeout.Infinite);
         }
     }
 

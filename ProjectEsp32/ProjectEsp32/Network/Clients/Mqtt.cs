@@ -2,6 +2,7 @@
 
 using nanoFramework.M2Mqtt;
 using nanoFramework.M2Mqtt.Messages;
+using Network.Constants;
 using System;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
@@ -28,12 +29,16 @@ namespace Network.Clients
 
         public bool Publish(string topic, string message)
         {
-            Publish(topic, Encoding.UTF8.GetBytes(message), null, null, MqttQoSLevel.ExactlyOnce, false); // should be changed
+            Debug.WriteLine("Publishing");
+            Debug.WriteLine($"id publish: {Publish(topic, Encoding.UTF8.GetBytes(message), null, null, MqttQoSLevel.ExactlyOnce, false)}"); // should be changed
+            Debug.WriteLine("Published string");
             return true;
         }
         public new bool Publish(string topic, byte[] message)
         {
-            Publish(topic, message, null, null, MqttQoSLevel.ExactlyOnce, false); // should be changed
+            Debug.WriteLine("Publishing");
+            Debug.WriteLine($"id publish: {Publish(topic, message, null, null, MqttQoSLevel.ExactlyOnce, false)}"); // should be changed
+            Debug.WriteLine("Published bytes");
             return true;
         }
         public void Subscribe(string topic)
@@ -48,9 +53,12 @@ namespace Network.Clients
         {
             try
             {
-                Connect(_clientID, _username, _password);
+                Debug.WriteLine("Connecting MQTT");
+                Debug.WriteLine($"connected: {Connect(_clientID, _username, _password) == MqttReasonCode.Success}");
+                Debug.WriteLine("Gotcha!");
             } catch
             {
+                Debug.WriteLine("Badcha!");
                 return false;
             }
             return IsConnected;
@@ -61,7 +69,19 @@ namespace Network.Clients
             {
                 Disconnect();
             }
-            return Connect(_clientID, _username, _password) == MqttReasonCode.Success;
+            try
+            {
+                var connected = Connect(_clientID, _username, _password);
+                if (connected == MqttReasonCode.Success)
+                {
+                    Subscribe("/Instructions");
+                    Subscribe("/BootData");
+                }
+                return connected == MqttReasonCode.Success;
+            } catch 
+            { 
+                return false; 
+            }
         }
 
         public event IClient.GotMessageEventHandler Got;

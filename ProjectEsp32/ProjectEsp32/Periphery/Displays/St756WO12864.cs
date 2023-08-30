@@ -28,10 +28,10 @@ namespace Periphery.Displays
         }
         public void SetImage(byte[] image)
         {
-            PinARes.Write(PinValue.High);
-            PinA0.Write((PinValue)(byte)StateA0.Data);
-            Thread.Sleep(10);
-            this.Write(new SpanByte(image));
+            //PinARes.Write(PinValue.High);
+            //PinA0.Write((PinValue)(byte)StateA0.Data);
+            //Thread.Sleep(10);
+            //this.Write(new SpanByte(image));
         }
     }
 }
