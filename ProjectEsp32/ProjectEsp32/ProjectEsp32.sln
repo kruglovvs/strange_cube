@@ -1,0 +1,27 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{11A8DD76-328B-46DF-9F39-F559912D0360}") = "ProjectEsp32", "ProjectEsp32.nfproj", "{F51D920D-4617-450D-B438-1E8BD680DB26}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F51D920D-4617-450D-B438-1E8BD680DB26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F51D920D-4617-450D-B438-1E8BD680DB26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F51D920D-4617-450D-B438-1E8BD680DB26}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{F51D920D-4617-450D-B438-1E8BD680DB26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F51D920D-4617-450D-B438-1E8BD680DB26}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F51D920D-4617-450D-B438-1E8BD680DB26}.Release|Any CPU.Deploy.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FA6E1AEB-0C23-41C1-9EC5-ACE8E2316461}
+	EndGlobalSection
+EndGlobal
