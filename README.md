@@ -1,2 +1,2 @@
 # strange_game
-this is the hardware part of the project "Games with secrets"
+Учебный проект аппаратно-программной разработки. Представляет собой несколько плат, собираемых в куб и с напаянными различными датчиками периферии, и плату esp32 с кодом, написанным на C# nanoframework
